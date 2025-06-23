@@ -4,6 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Agritalia aplikacija</title>
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#2c5f2d" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#2c5f2d" />
+    <link rel="icon" href="logo.png" />
+
+
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -395,8 +403,8 @@
             html += '<ul>';
             ferts.forEach(f => {
                 html += `<li><strong>${f.name}</strong>: ${f.purpose} <br>
-                             Vreme primene: <em>${f.month}</em><br>
-                             Količina: <em>${f.amount}</em></li><br>`;
+                                 Vreme primene: <em>${f.month}</em><br>
+                                 Količina: <em>${f.amount}</em></li><br>`;
             });
             html += '</ul>';
             resultDiv.innerHTML = html;
@@ -438,13 +446,13 @@
             }
 
             fertRec.innerHTML = `
-                    <p>Preporučujemo upotrebu đubriva bogatih azotom, fosforom i kalijumom, kao i organskim materijama za poboljšanje plodnosti zemljišta.</p>
-                    <ul>
-                        <li><strong>Nervosol Organic:</strong> Organska podrška i podsticaj rasta, 500-1500 kg/ha.</li>
-                        <li><strong>Panorama Bio Plus:</strong> Mikrobiološka đubriva za poboljšanje zdravlja tla, 25-50 g/ha.</li>
-                        <li><strong>Agrilikvid N20:</strong> Tečno azotno đubrivo, 3-5 kg/ha u toku vegetacije.</li>
-                    </ul>
-                `;
+                        <p>Preporučujemo upotrebu đubriva bogatih azotom, fosforom i kalijumom, kao i organskim materijama za poboljšanje plodnosti zemljišta.</p>
+                        <ul>
+                            <li><strong>Nervosol Organic:</strong> Organska podrška i podsticaj rasta, 500-1500 kg/ha.</li>
+                            <li><strong>Panorama Bio Plus:</strong> Mikrobiološka đubriva za poboljšanje zdravlja tla, 25-50 g/ha.</li>
+                            <li><strong>Agrilikvid N20:</strong> Tečno azotno đubrivo, 3-5 kg/ha u toku vegetacije.</li>
+                        </ul>
+                    `;
         }
 
         // Saveti - klik na savet prikazuje detalje
@@ -491,6 +499,14 @@
             }
         }
     </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js')
+                .then(() => console.log('Service Worker registrovan!'))
+                .catch(err => console.log('Registracija SW nije uspela:', err));
+        }
+    </script>
+
 </body>
 </html>
 
