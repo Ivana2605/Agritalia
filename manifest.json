@@ -1,20 +1,14 @@
+
 {
-  "name": "Agritalia aplikacija",
-  "short_name": "Agritalia",
-  "start_url": ".",
+  "name": "Berba Malina - Agritalia",
+  "short_name": "BerbaMalina",
+  "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#f0f8f0",
-  "theme_color": "#2c5f2d",
-  "icons": [
-    {
-      "src": "logo.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "logo.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
+  "background_color": "#f2fff2",
+  "theme_color": "#1b5e20",
+  "icons": [{
+    "src": "logo.png",
+    "sizes": "192x192",
+    "type": "image/png"
+  }]
 }

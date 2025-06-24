@@ -1,23 +1,22 @@
-﻿const CACHE_NAME = 'agritalia-cache-v1';
-const urlsToCache = [
-    '/',
-    '/index.html',
-    '/manifest.json',
-    '/logo.png',
-    // dodaj ovde i ostale statične fajlove kao CSS i JS ako ih imaš
-];
 
-self.addEventListener('install', event => {
-    event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then(cache => cache.addAll(urlsToCache))
-    );
+self.addEventListener('install', function(e) {
+  e.waitUntil(
+    caches.open('berba-cache').then(function(cache) {
+      return cache.addAll([
+        'index.html',
+        'style.css',
+        'app.js',
+        'manifest.json',
+        'logo.png'
+      ]);
+    })
+  );
 });
 
-self.addEventListener('fetch', event => {
-    event.respondWith(
-        caches.match(event.request)
-            .then(response => response || fetch(event.request))
-    );
+self.addEventListener('fetch', function(e) {
+  e.respondWith(
+    caches.match(e.request).then(function(response) {
+      return response || fetch(e.request);
+    })
+  );
 });
-

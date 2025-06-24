@@ -1,514 +1,300 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="sr">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Agritalia aplikacija</title>
-    <link rel="manifest" href="manifest.json" />
-    <meta name="theme-color" content="#2c5f2d" />
-    <link rel="manifest" href="manifest.json" />
-    <meta name="theme-color" content="#2c5f2d" />
-    <link rel="icon" href="logo.png" />
-
-
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Berba Malina - Agritalia</title>
+    <link rel="icon" href="icon.png" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background: #f0f8f0;
             margin: 0;
-            padding: 20px;
-            color: #1f4518;
-            font-size: 18px;
-            line-height: 1.4;
-        }
-
-        .container {
-            max-width: 700px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px #ccc;
-        }
-
-        img.logo {
-            display: block;
-            margin: 0 auto 20px;
-            max-width: 150px;
-        }
-
-        .tabs {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 20px;
-        }
-
-        .tab-button {
-            flex: 1;
-            padding: 12px;
-            margin: 0 5px;
-            background: #2c5f2d;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 18px;
-            transition: background-color 0.3s;
-        }
-
-            .tab-button.active {
-                background: #1f4518;
-                box-shadow: 0 0 8px #1f4518aa;
-            }
-
-        .tab-content {
-            display: none;
-            margin-top: 10px;
-        }
-
-            .tab-content.active {
-                display: block;
-            }
-
-        label {
-            font-weight: bold;
-            margin-top: 15px;
-            display: block;
-        }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            margin-top: 6px;
-            border-radius: 6px;
+            padding: 10px;
+            background: #f9fdf9;
+            max-width: 480px;
+            margin-left: auto;
+            margin-right: auto;
             border: 1px solid #ccc;
-            font-size: 18px;
-            box-sizing: border-box;
+            border-radius: 8px;
         }
 
-        button.action-btn {
-            background: #2c5f2d;
+        header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 2px solid #4CAF50;
+        }
+
+            header img {
+                height: 40px;
+            }
+
+        h2 {
+            color: #4CAF50;
+        }
+
+        form label {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+        }
+
+        form input, form button {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+
+        button {
+            background: #4CAF50;
             color: white;
             border: none;
-            border-radius: 6px;
-            padding: 14px;
-            margin-top: 20px;
-            font-weight: bold;
-            font-size: 18px;
+            margin-top: 15px;
             cursor: pointer;
-            transition: background-color 0.3s;
         }
 
-            button.action-btn:hover {
-                background: #246022;
+            button:hover {
+                background: #45a049;
             }
 
-        #recommendation-result, #soil-result, #fertilizer-recommendation {
+        table {
+            width: 100%;
+            border-collapse: collapse;
             margin-top: 20px;
-            padding: 15px;
-            border-left: 6px solid #2c5f2d;
-            background: #e1f5e1;
-            font-size: 18px;
+            table-layout: fixed; /* fiksne kolone */
         }
 
-        .low-parameter {
-            color: red;
+        th, td {
+            border: 1px solid #ccc;
+            padding: 4px 6px;
+            text-align: center;
+            font-size: 0.85rem;
+            white-space: normal; /* prelamanje teksta */
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+            /* Fiksne širine kolona, ukupno 100% */
+            th:nth-child(1), td:nth-child(1) {
+                width: 20%;
+            }
+            /* Datum */
+            th:nth-child(2), td:nth-child(2) {
+                width: 13%;
+            }
+            /* Kol. */
+            th:nth-child(3), td:nth-child(3) {
+                width: 13%;
+            }
+            /* Cena/kg */
+            th:nth-child(4), td:nth-child(4) {
+                width: 18%;
+            }
+            /* Prihod */
+            th:nth-child(5), td:nth-child(5) {
+                width: 13%;
+            }
+            /* Sati */
+            th:nth-child(6), td:nth-child(6) {
+                width: 13%;
+            }
+            /* Trošak */
+            th:nth-child(7), td:nth-child(7) {
+                width: 10%;
+            }
+        /* Neto */
+
+        .neto-zarada {
+            background-color: #d0f5d0;
             font-weight: bold;
+            color: #2e7d32;
+            font-size: 1rem;
         }
 
-        /* Saveti list */
-        #advice-list {
-            list-style: none;
-            padding-left: 0;
-            margin-bottom: 15px;
+        .izvestaj-naslov {
+            color: #4CAF50;
+            font-size: 1.2rem;
+            margin-top: 20px;
         }
-
-            #advice-list li {
-                background: #d7edd8;
-                padding: 12px;
-                margin-bottom: 8px;
-                border-radius: 6px;
-                cursor: pointer;
-                font-weight: bold;
-                color: #1f4518;
-                font-size: 18px;
-                transition: background-color 0.2s;
-            }
-
-                #advice-list li:hover {
-                    background: #b6d4b0;
-                }
-
-        #advice-details > div {
-            background: #f9fff9;
-            padding: 15px;
-            border-radius: 6px;
-            box-shadow: 0 0 6px #ccc;
-            margin-bottom: 20px;
-            font-size: 18px;
-            line-height: 1.5;
-        }
-
-        #qa-list .qa-entry {
-            border-top: 1px solid #ccc;
-            padding: 10px 0 5px 0;
-            margin-top: 10px;
-            font-size: 16px;
-            color: #2c5f2d;
-        }
-
-            #qa-list .qa-entry strong {
-                font-weight: 700;
-            }
     </style>
 </head>
 <body>
-    <div class="container">
-        <img src="logo.png" alt="Agritalia logo" class="logo" />
-        <div class="tabs">
-            <button class="tab-button active" data-tab="recommendation">Preporuka đubriva</button>
-            <button class="tab-button" data-tab="soil">Analiza zemljišta</button>
-            <button class="tab-button" data-tab="advice">Saveti</button>
-        </div>
+    <header>
+        <img src="logo.png" alt="Agritalia Logo">
+    </header>
 
-        <!-- Preporuka đubriva -->
-        <section id="recommendation" class="tab-content active">
-            <label>Unesite kulturu (ili izaberite):</label>
-            <input list="crop-list" id="crop-select" placeholder="npr. paprika" autocomplete="off" />
-            <datalist id="crop-list">
-                <option value="paprika"></option>
-                <option value="soja"></option>
-                <option value="duvan"></option>
-                <option value="uljana-repica"></option>
-                <option value="suncokret"></option>
-                <option value="kukuruz"></option>
-                <option value="psenica"></option>
-                <option value="malina"></option>
-                <option value="paradajz"></option>
-                <option value="jagoda"></option>
-            </datalist>
-            <label>Izaberite tip uzgoja:</label>
-            <select id="growth-type">
-                <option value="konvencionalni">Konvencionalni</option>
-                <option value="organski">Organski</option>
-                <option value="mikrobioloski">Mikrobiološki</option>
-            </select>
-            <button class="action-btn" onclick="showFertilizerRecommendation()">Prikaži preporuku</button>
-            <div id="recommendation-result"></div>
-        </section>
+    <h2>Unos podataka berbe</h2>
+    <form id="formBerba">
+        <label>Datum berbe:</label>
+        <input type="date" id="datum" required style="font-size: 1.2rem;">
 
-        <!-- Analiza zemljišta -->
-        <section id="soil" class="tab-content">
-            <label>Izaberite ili unesite kulturu:</label>
-            <input list="crop-list" id="soil-crop-input" placeholder="npr. paprika" autocomplete="off" />
-            <label>pH vrednost (optimalno 6.0-7.0):</label>
-            <input type="number" step="0.1" id="ph-level" />
-            <label>Azot (mg/kg) (optimalno 10-30):</label>
-            <input type="number" id="azot-level" />
-            <label>Fosfor (mg/kg) (optimalno 15-40):</label>
-            <input type="number" id="fosfor-level" />
-            <label>Kalijum (mg/kg) (optimalno 120-200):</label>
-            <input type="number" id="kalijum-level" />
-            <label>Organska materija (%) (optimalno 3.0-5.0):</label>
-            <input type="number" step="0.1" id="org-materija" />
-            <button class="action-btn" onclick="analyzeSoil()">Analiziraj</button>
-            <div id="soil-result"></div>
-            <div id="fertilizer-recommendation"></div>
-        </section>
+        <label>Količina (kg):</label>
+        <input type="number" id="kolicina" step="0.1" required>
 
-        <!-- Saveti -->
-        <section id="advice" class="tab-content">
-            <ul id="advice-list">
-                <li data-id="savet1">Kako pripremiti zemljište za prolećnu setvu</li>
-                <li data-id="savet2">Zašto koristiti mikrobiološka đubriva</li>
-            </ul>
-            <div id="advice-details">
-                <div id="savet1" style="display:none;">
-                    Pravilna priprema zemljišta je osnova za uspešan usev. Pre setve, zemljište treba dobro prozračiti, ukloniti korov, i po potrebi dodati odgovarajuća đubriva.
-                </div>
-                <div id="savet2" style="display:none;">
-                    Mikrobiološka đubriva poboljšavaju kvalitet zemljišta i povećavaju otpornost biljaka, doprinoseći zdravijem i održivom uzgoju.
-                </div>
-            </div>
-            <h3>Postavite pitanje</h3>
-            <textarea id="question-input" rows="3" placeholder="Unesite pitanje..."></textarea>
-            <button class="action-btn" id="submit-question-btn">Pošalji pitanje</button>
-            <div id="qa-list"></div>
-        </section>
+        <label>Prodajna cena po kg (din):</label>
+        <input type="number" id="cena" required>
+
+        <label>Broj berača:</label>
+        <input type="number" id="beraci" required>
+
+        <label>Ukupan broj sati:</label>
+        <input type="number" id="sati" required>
+
+        <label>Trošak po satu (din):</label>
+        <input type="number" id="trosak" required>
+
+        <button type="submit">Sačuvaj unos</button>
+        <button type="button" onclick="prikaziIzvestajZaDan()">Izveštaj za dan</button>
+        <button type="button" onclick="obrisiPoDatumu()">Obriši unos za dan</button>
+    </form>
+
+    <div class="izvestaj-naslov" style="margin-top:25px; color:#4CAF50;">
+        Izveštaj od
+        <input type="date" id="od" style="font-size:1rem; margin-left:10px; margin-right:10px;">
+        do
+        <input type="date" id="do" style="font-size:1rem; margin-left:10px; margin-right:10px;">
     </div>
+    <button onclick="filtriraj()">Prikaži izveštaj</button>
+    <button onclick="exportToExcel()">📊 Excel</button>
+    <button onclick="exportToPDF()">📄 PDF</button>
+
+    <div id="izvestaj"></div>
 
     <script>
-        // Đubriva - sada sa svim relevantnim đubrivima po kulturi i tipu uzgoja
-        const fertilizers = {
-            "paprika": {
-                "konvencionalni": [
-                    { name: "Agrilikvid N20", purpose: "Poboljšava rast i plodnost biljke.", month: "mart-april", amount: "3-5 kg/ha u 2 do 3 aplikacije tokom vegetacije" },
-                    { name: "Hiperphoska Bleu", purpose: "Postepeno oslobađanje hraniva.", month: "predsetvena priprema, setva, sadnja", amount: "200-400 kg/ha" }
-                ],
-                "organski": [
-                    { name: "Nervosol Organic", purpose: "Organska podrška i podsticaj rasta.", month: "jesen ili rano proleće, pred osnovnu obradu ili po oranju", amount: "500-1000 kg/ha u ratarstvu, 1000-1500 kg/ha u povrtarstvu i voćarstvu" }
-                ],
-                "mikrobioloski": [
-                    { name: "Panorama Bio Plus", purpose: "Poboljšava usvajanje hranljivih materija i otpornost biljaka.", month: "februar-mart", amount: "25-50 g/ha" }
-                ]
-            },
-            "soja": {
-                "konvencionalni": [
-                    { name: "Agrilikvid N20", purpose: "Povećava otpornost i prinos.", month: "april-maj", amount: "3-5 kg/ha u 2 do 3 aplikacije tokom vegetacije" },
-                    { name: "Hiperphoska Bleu", purpose: "Postepeno oslobađanje hraniva.", month: "predsetvena priprema, setva, sadnja", amount: "200-400 kg/ha" }
-                ],
-                "organski": [
-                    { name: "Nervosol Organic", purpose: "Organski stimulator i zaštita biljke.", month: "jesen ili rano proleće", amount: "500-1000 kg/ha u ratarstvu, 1000-1500 kg/ha u povrtarstvu i voćarstvu" }
-                ],
-                "mikrobioloski": [
-                    { name: "Panorama Bio Plus", purpose: "Poboljšava rast korena i zdravlje tla.", month: "februar-mart", amount: "25-50 g/ha" }
-                ]
-            },
-            "duvan": {
-                "konvencionalni": [
-                    { name: "Agrilikvid N20", purpose: "Podstiče cvetanje i kvalitet ploda.", month: "mart-april", amount: "3-5 kg/ha u 2 do 3 aplikacije tokom vegetacije" },
-                    { name: "Hiperphoska Bleu", purpose: "Postepeno oslobađanje hraniva.", month: "predsetvena priprema, setva, sadnja", amount: "200-400 kg/ha" }
-                ],
-                "organski": [
-                    { name: "Nervosol Organic", purpose: "Podrška zdravlju tla i biljke.", month: "jesen ili rano proleće", amount: "500-1000 kg/ha u ratarstvu, 1000-1500 kg/ha u povrtarstvu i voćarstvu" }
-                ],
-                "mikrobioloski": [
-                    { name: "Panorama Bio Plus", purpose: "Poboljšava usvajanje hranljivih materija.", month: "februar-mart", amount: "25-50 g/ha" }
-                ]
-            },
-            "uljana-repica": {
-                "konvencionalni": [
-                    { name: "Agrilikvid NPK 4-6-10", purpose: "Podstiče cvetanje i plodnost.", month: "februar-mart", amount: "2-3 kg/ha, 1-2 puta u toku vegetacije" },
-                    { name: "Hiperphoska Bleu", purpose: "Postepeno oslobađanje hraniva.", month: "predsetvena priprema, setva, sadnja", amount: "200-400 kg/ha" }
-                ],
-                "organski": [
-                    { name: "Nervosol Organic", purpose: "Organski stimulator rasta.", month: "jesen ili rano proleće", amount: "500-1000 kg/ha u ratarstvu, 1000-1500 kg/ha u povrtarstvu i voćarstvu" }
-                ],
-                "mikrobioloski": [
-                    { name: "Panorama Bio Plus", purpose: "Poboljšava otpornost biljaka.", month: "februar-mart", amount: "25-50 g/ha" }
-                ]
-            },
-            "suncokret": {
-                "konvencionalni": [
-                    { name: "Agrilikvid N20", purpose: "Poboljšava prinos i kvalitet ulja.", month: "april-maj", amount: "3-5 kg/ha u 2 do 3 aplikacije tokom vegetacije" },
-                    { name: "Hiperphoska Bleu", purpose: "Postepeno oslobađanje hraniva.", month: "predsetvena priprema, setva, sadnja", amount: "200-400 kg/ha" }
-                ],
-                "organski": [
-                    { name: "Nervosol Organic", purpose: "Podrška zemljištu i biljci.", month: "jesen ili rano proleće", amount: "500-1000 kg/ha u ratarstvu, 1000-1500 kg/ha u povrtarstvu i voćarstvu" }
-                ],
-                "mikrobioloski": [
-                    { name: "Panorama Bio Plus", purpose: "Poboljšava rast i zdravlje korena.", month: "februar-mart", amount: "25-50 g/ha" }
-                ]
-            },
-            "kukuruz": {
-                "konvencionalni": [
-                    { name: "Mastro +", purpose: "Depozitor đubriva tokom setve.", month: "tokom setve", amount: "125-150 kg/ha" },
-                    { name: "Agrilikvid N20", purpose: "Podstiče razvoj korena.", month: "mart-april", amount: "3-5 kg/ha u 2 do 3 aplikacije tokom vegetacije" }
-                ],
-                "organski": [
-                    { name: "Nervosol Organic", purpose: "Organski stimulator i poboljšava plodnost tla.", month: "jesen ili rano proleće", amount: "500-1000 kg/ha u ratarstvu" }
-                ],
-                "mikrobioloski": [
-                    { name: "Panorama Bio Plus", purpose: "Poboljšava zdravlje tla i usvajanje hraniva.", month: "februar-mart", amount: "25-50 g/ha" }
-                ]
-            },
-            "psenica": {
-                "konvencionalni": [
-                    { name: "Agrilikvid NPK 4-6-10", purpose: "Podrška ishrani useva.", month: "tijekom vegetacije", amount: "2-3 kg/ha, 1-2 puta tokom vegetacije" },
-                    { name: "Hiperphoska Bleu", purpose: "Postepeno oslobađanje hraniva.", month: "predsetvena priprema, setva, sadnja", amount: "200-400 kg/ha" }
-                ],
-                "organski": [
-                    { name: "Nervosol Organic", purpose: "Podrška plodnosti zemljišta.", month: "jesen ili rano proleće", amount: "500-1000 kg/ha u ratarstvu" }
-                ],
-                "mikrobioloski": [
-                    { name: "Panorama Bio Plus", purpose: "Poboljšava zdravlje korena i tla.", month: "februar-mart", amount: "25-50 g/ha" }
-                ]
-            },
-            "malina": {
-                "konvencionalni": [
-                    { name: "Agrilikvid N20", purpose: "Poboljšava kvalitet i veličinu plodova.", month: "februar-mart", amount: "3-5 kg/ha u 2 do 3 aplikacije tokom vegetacije" },
-                    { name: "Kaliq", purpose: "Poboljšava kalcijum u plodovima i otpornost.", month: "februar-mart", amount: "Folijarno 300-400 g na 100 l vode ili navodnjavanje 3-10 kg/ha" }
-                ],
-                "organski": [
-                    { name: "Nervosol Organic", purpose: "Podrška rastu i otpornosti biljke.", month: "jesen ili rano proleće, pred osnovnu obradu ili po oranju", amount: "500-1000 kg/ha u ratarstvu, 1000-1500 kg/ha u povrtarstvu i voćarstvu" }
-                ],
-                "mikrobioloski": [
-                    { name: "Panorama Bio Plus", purpose: "Poboljšava usvajanje hranljivih materija i otpornost biljaka.", month: "februar-mart", amount: "25-50 g/ha" }
-                ]
-            },
-            "paradajz": {
-                "konvencionalni": [
-                    { name: "Agrilikvid N20", purpose: "Poboljšava rast i plodnost.", month: "mart-april", amount: "3-5 kg/ha" }
-                ],
-                "organski": [
-                    { name: "Nervosol Organic", purpose: "Organski stimulator rasta.", month: "jesen ili rano proleće", amount: "500-1500 kg/ha" }
-                ],
-                "mikrobioloski": [
-                    { name: "Panorama Bio Plus", purpose: "Poboljšava zdravlje tla.", month: "februar-mart", amount: "25-50 g/ha" }
-                ]
-            },
-            "jagoda": {
-                "konvencionalni": [
-                    { name: "Agrilikvid N20", purpose: "Podstiče razvoj plodova.", month: "mart-april", amount: "3-5 kg/ha" }
-                ],
-                "organski": [
-                    { name: "Nervosol Organic", purpose: "Organski stimulator i zaštita biljaka.", month: "jesen ili rano proleće", amount: "500-1500 kg/ha" }
-                ],
-                "mikrobioloski": [
-                    { name: "Panorama Bio Plus", purpose: "Poboljšava otpornost i usvajanje hraniva.", month: "februar-mart", amount: "25-50 g/ha" }
-                ]
-            }
-        };
+        let podaci = JSON.parse(localStorage.getItem("berbe")) || [];
 
-        // Pritiskom na tab dugme prikazujemo odgovarajući sadržaj
-        const tabs = document.querySelectorAll('.tab-button');
-        const contents = document.querySelectorAll('.tab-content');
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                tabs.forEach(b => b.classList.remove('active'));
-                tab.classList.add('active');
-                const tabId = tab.getAttribute('data-tab');
-                contents.forEach(content => {
-                    content.classList.toggle('active', content.id === tabId);
-                });
-            });
+        document.getElementById("formBerba").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const datum = document.getElementById("datum").value;
+            const kolicina = parseFloat(document.getElementById("kolicina").value);
+            const cena = parseFloat(document.getElementById("cena").value);
+            const beraci = parseInt(document.getElementById("beraci").value);
+            const sati = parseInt(document.getElementById("sati").value);
+            const trosak = parseFloat(document.getElementById("trosak").value);
+
+            if (!datum || isNaN(kolicina) || isNaN(cena) || isNaN(beraci) || isNaN(sati) || isNaN(trosak)) {
+                alert("Molimo popunite sva polja ispravno.");
+                return;
+            }
+
+            const prihod = kolicina * cena;
+            const ukupnoTrosak = sati * trosak;
+            const neto = prihod - ukupnoTrosak;
+
+            podaci.push({ datum, kolicina, cena, prihod, sati, ukupnoTrosak, neto });
+            localStorage.setItem("berbe", JSON.stringify(podaci));
+            alert("Podaci su sačuvani.");
+            document.getElementById("formBerba").reset();
         });
 
-        // Funkcija za prikaz preporuke đubriva
-        function showFertilizerRecommendation() {
-            const cropInput = document.getElementById('crop-select').value.trim().toLowerCase();
-            const growthType = document.getElementById('growth-type').value;
-            const resultDiv = document.getElementById('recommendation-result');
-            resultDiv.innerHTML = '';
-
-            if (!cropInput) {
-                resultDiv.innerHTML = '<p style="color:red;">Molimo unesite ili izaberite kulturu.</p>';
+        function prikaziIzvestajZaDan() {
+            const datum = document.getElementById("datum").value;
+            if (!datum) {
+                alert("Izaberite datum za izveštaj.");
                 return;
             }
-
-            if (!fertilizers[cropInput]) {
-                resultDiv.innerHTML = `<p style="color:red;">Nemamo podatke za kulturu: <strong>${cropInput}</strong></p>`;
+            const dani = podaci.filter(d => d.datum === datum);
+            if (dani.length === 0) {
+                document.getElementById("izvestaj").innerHTML = "<p>Nema podataka za taj dan.</p>";
                 return;
             }
-
-            const ferts = fertilizers[cropInput][growthType];
-            if (!ferts || ferts.length === 0) {
-                resultDiv.innerHTML = `<p style="color:red;">Nemamo preporuke za ovu kombinaciju.</p>`;
-                return;
-            }
-
-            let html = `<h3>Preporučena đubriva za <em>${cropInput}</em>, tip uzgoja: <strong>${growthType}</strong></h3>`;
-            html += '<ul>';
-            ferts.forEach(f => {
-                html += `<li><strong>${f.name}</strong>: ${f.purpose} <br>
-                                 Vreme primene: <em>${f.month}</em><br>
-                                 Količina: <em>${f.amount}</em></li><br>`;
-            });
-            html += '</ul>';
-            resultDiv.innerHTML = html;
+            prikaziTabelu(dani, `Izveštaj za ${formatirajDatum(datum)}`);
         }
 
-        // Analiza zemljišta
-        function analyzeSoil() {
-            const ph = parseFloat(document.getElementById('ph-level').value);
-            const azot = parseFloat(document.getElementById('azot-level').value);
-            const fosfor = parseFloat(document.getElementById('fosfor-level').value);
-            const kalijum = parseFloat(document.getElementById('kalijum-level').value);
-            const org = parseFloat(document.getElementById('org-materija').value);
-
-            const soilResult = document.getElementById('soil-result');
-            const fertRec = document.getElementById('fertilizer-recommendation');
-            soilResult.innerHTML = '';
-            fertRec.innerHTML = '';
-
-            if (
-                isNaN(ph) || isNaN(azot) || isNaN(fosfor) ||
-                isNaN(kalijum) || isNaN(org)
-            ) {
-                soilResult.innerHTML = '<p style="color:red;">Molimo unesite sve parametre za analizu.</p>';
+        function filtriraj() {
+            const od = document.getElementById("od").value;
+            const doD = document.getElementById("do").value;
+            if (!od || !doD) {
+                alert("Izaberite oba datuma za filtriranje.");
                 return;
             }
-
-            let warnings = [];
-
-            if (ph < 6.0 || ph > 7.0) warnings.push("pH vrednost nije optimalna (optimalno 6.0-7.0).");
-            if (azot < 10) warnings.push("Azot je ispod optimalnog nivoa (10-30 mg/kg).");
-            if (fosfor < 15) warnings.push("Fosfor je ispod optimalnog nivoa (15-40 mg/kg).");
-            if (kalijum < 120) warnings.push("Kalijum je ispod optimalnog nivoa (120-200 mg/kg).");
-            if (org < 3.0) warnings.push("Organska materija je ispod optimalnog nivoa (3.0-5.0%).");
-
-            if (warnings.length === 0) {
-                soilResult.innerHTML = "<p style='color:green; font-weight:bold;'>Parametri zemljišta su unutar optimalnih vrednosti.</p>";
-            } else {
-                soilResult.innerHTML = "<ul style='color:red; font-weight:bold;'>" + warnings.map(w => `<li>${w}</li>`).join('') + "</ul>";
+            if (od > doD) {
+                alert("Datum 'od' ne može biti veći od datuma 'do'.");
+                return;
             }
-
-            fertRec.innerHTML = `
-                        <p>Preporučujemo upotrebu đubriva bogatih azotom, fosforom i kalijumom, kao i organskim materijama za poboljšanje plodnosti zemljišta.</p>
-                        <ul>
-                            <li><strong>Nervosol Organic:</strong> Organska podrška i podsticaj rasta, 500-1500 kg/ha.</li>
-                            <li><strong>Panorama Bio Plus:</strong> Mikrobiološka đubriva za poboljšanje zdravlja tla, 25-50 g/ha.</li>
-                            <li><strong>Agrilikvid N20:</strong> Tečno azotno đubrivo, 3-5 kg/ha u toku vegetacije.</li>
-                        </ul>
-                    `;
+            const filtrirani = podaci.filter(p => p.datum >= od && p.datum <= doD);
+            if (filtrirani.length === 0) {
+                document.getElementById("izvestaj").innerHTML = "<p>Nema podataka za taj period.</p>";
+                return;
+            }
+            prikaziTabelu(filtrirani, `Izveštaj od ${formatirajDatum(od)} do ${formatirajDatum(doD)}`);
         }
 
-        // Saveti - klik na savet prikazuje detalje
-        const adviceList = document.getElementById('advice-list');
-        adviceList.addEventListener('click', e => {
-            if (e.target.tagName.toLowerCase() === 'li') {
-                const id = e.target.getAttribute('data-id');
-                document.querySelectorAll('#advice-details > div').forEach(div => {
-                    div.style.display = (div.id === id) ? 'block' : 'none';
-                });
-            }
-        });
+        function prikaziTabelu(niz, naslov) {
+            let html = `<h3 style='color:#4CAF50;'>${naslov}</h3><table><tr><th>Datum</th><th>Kol.</th><th>Cena/kg</th><th>Prihod</th><th>Sati</th><th>Trošak</th><th>Neto</th></tr>`;
+            niz.forEach(p => {
+                html += `<tr>
+              <td>${formatirajDatum(p.datum)}</td>
+              <td>${p.kolicina.toFixed(2)}</td>
+              <td>${p.cena.toFixed(2)}</td>
+              <td>${p.prihod.toFixed(2)}</td>
+              <td>${p.sati}</td>
+              <td>${p.ukupnoTrosak.toFixed(2)}</td>
+              <td class='neto-zarada'>${p.neto.toFixed(2)}</td>
+            </tr>`;
+            });
+            html += "</table>";
+            document.getElementById("izvestaj").innerHTML = html;
+        }
 
-        // Pitanja i odgovori (jednostavan lokalni Q&A)
-        const submitQuestionBtn = document.getElementById('submit-question-btn');
-        const qaList = document.getElementById('qa-list');
-        submitQuestionBtn.addEventListener('click', () => {
-            const questionInput = document.getElementById('question-input');
-            const question = questionInput.value.trim();
-            if (!question) {
-                alert("Unesite pitanje pre slanja.");
+        function formatirajDatum(d) {
+            const [y, m, day] = d.split("-");
+            return `${day}.${m}.${y}`;
+        }
+
+        function exportToExcel() {
+            const tabela = document.querySelector("#izvestaj table");
+            if (!tabela) return alert("Nema izveštaja za izvoz.");
+            const wb = XLSX.utils.table_to_book(tabela);
+            XLSX.writeFile(wb, "IzvestajBerba.xlsx");
+        }
+
+        function exportToPDF() {
+            const tabela = document.querySelector("#izvestaj");
+            if (!tabela || tabela.innerHTML.trim() === "") return alert("Nema izveštaja za izvoz.");
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFontSize(16);
+            doc.setTextColor(76, 175, 80);
+            doc.text("Izveštaj o berbi maline", 10, 10);
+
+            doc.setFontSize(10);
+            doc.setTextColor(0, 0, 0);
+            doc.html(tabela, {
+                x: 10,
+                y: 20,
+                callback: function () {
+                    doc.save("IzvestajBerba.pdf");
+                }
+            });
+        }
+
+        function obrisiPoDatumu() {
+            const datum = document.getElementById("datum").value;
+            if (!datum) {
+                alert("Unesite datum za brisanje.");
                 return;
             }
-
-            const answer = generateAnswer(question);
-            const entry = document.createElement('div');
-            entry.className = 'qa-entry';
-            entry.innerHTML = `<strong>Pitanje:</strong> ${question}<br><strong>Odgovor:</strong> ${answer}`;
-            qaList.prepend(entry);
-            questionInput.value = '';
-        });
-
-        // Jednostavna simulacija odgovora na pitanja
-        function generateAnswer(question) {
-            question = question.toLowerCase();
-            if (question.includes('kada koristiti ricinus')) {
-                return 'Ricinus u pupak se obično stavlja za detoksikaciju i stimulaciju creva, najčešće uveče pre spavanja.';
-            } else if (question.includes('kako koristiti panorama bio plus')) {
-                return 'Panorama Bio Plus se koristi u količini od 25-50 g/ha, obično u rano proleće ili jesen, u zavisnosti od kulture.';
-            } else if (question.includes('zašto koristiti mikrobiološka đubriva')) {
-                return 'Mikrobiološka đubriva poboljšavaju strukturu tla i povećavaju otpornost biljaka na bolesti.';
-            } else {
-                return 'Hvala na pitanju! Trenutno nemamo precizan odgovor, ali ćemo se potruditi da ga dodamo uskoro.';
-            }
+            if (!confirm(`Da li sigurno želite da obrišete unos za datum ${formatirajDatum(datum)}?`)) return;
+            podaci = podaci.filter(p => p.datum !== datum);
+            localStorage.setItem("berbe", JSON.stringify(podaci));
+            alert("Unos za taj dan je obrisan.");
+            document.getElementById("izvestaj").innerHTML = "";
         }
     </script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('service-worker.js')
-                .then(() => console.log('Service Worker registrovan!'))
-                .catch(err => console.log('Registracija SW nije uspela:', err));
-        }
-    </script>
-
 </body>
 </html>
+
+
+
+
+
+
 
 
 
