@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Berba Malina - Agritalia</title>
-    <link rel="icon" href="icon.png" />
+    <title>Agritalia</title>
+    <link rel="icon" href="icon.png" type="image/png" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
@@ -26,14 +26,22 @@
             align-items: center;
             padding: 10px;
             border-bottom: 2px solid #4CAF50;
+            gap: 10px;
         }
 
             header img {
                 height: 40px;
             }
 
+            header h1 {
+                color: #4CAF50;
+                margin: 0;
+                font-size: 1.6rem;
+            }
+
         h2 {
             color: #4CAF50;
+            text-align: center;
         }
 
         form label {
@@ -66,7 +74,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
-            table-layout: fixed; /* fiksne kolone */
+            table-layout: fixed;
         }
 
         th, td {
@@ -74,11 +82,11 @@
             padding: 4px 6px;
             text-align: center;
             font-size: 0.85rem;
-            white-space: normal; /* prelamanje teksta */
+            white-space: normal;
             overflow-wrap: break-word;
             word-break: break-word;
         }
-            /* Fiksne širine kolona, ukupno 100% */
+            /* Širine kolona */
             th:nth-child(1), td:nth-child(1) {
                 width: 20%;
             }
@@ -107,7 +115,6 @@
                 width: 10%;
             }
         /* Neto */
-
         .neto-zarada {
             background-color: #d0f5d0;
             font-weight: bold;
@@ -120,43 +127,50 @@
             font-size: 1.2rem;
             margin-top: 20px;
         }
+        /* Stil za unos datuma u "Izveštaj od - do" */
+        #od, #do {
+            font-size: 1rem;
+            margin-left: 10px;
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
     <header>
-        <img src="logo.png" alt="Agritalia Logo">
+        <img src="logo.png" alt="Agritalia Logo" />
+        <h1>Agritalia</h1>
     </header>
 
     <h2>Unos podataka berbe</h2>
     <form id="formBerba">
         <label>Datum berbe:</label>
-        <input type="date" id="datum" required style="font-size: 1.2rem;">
+        <input type="date" id="datum" required style="font-size: 1.2rem;" />
 
         <label>Količina (kg):</label>
-        <input type="number" id="kolicina" step="0.1" required>
+        <input type="number" id="kolicina" step="0.1" required />
 
         <label>Prodajna cena po kg (din):</label>
-        <input type="number" id="cena" required>
+        <input type="number" id="cena" required />
 
         <label>Broj berača:</label>
-        <input type="number" id="beraci" required>
+        <input type="number" id="beraci" required />
 
         <label>Ukupan broj sati:</label>
-        <input type="number" id="sati" required>
+        <input type="number" id="sati" required />
 
         <label>Trošak po satu (din):</label>
-        <input type="number" id="trosak" required>
+        <input type="number" id="trosak" required />
 
         <button type="submit">Sačuvaj unos</button>
         <button type="button" onclick="prikaziIzvestajZaDan()">Izveštaj za dan</button>
         <button type="button" onclick="obrisiPoDatumu()">Obriši unos za dan</button>
     </form>
 
-    <div class="izvestaj-naslov" style="margin-top:25px; color:#4CAF50;">
+    <div class="izvestaj-naslov" style="margin-top: 25px; color: #4CAF50;">
         Izveštaj od
-        <input type="date" id="od" style="font-size:1rem; margin-left:10px; margin-right:10px;">
+        <input type="date" id="od" />
         do
-        <input type="date" id="do" style="font-size:1rem; margin-left:10px; margin-right:10px;">
+        <input type="date" id="do" />
     </div>
     <button onclick="filtriraj()">Prikaži izveštaj</button>
     <button onclick="exportToExcel()">📊 Excel</button>
