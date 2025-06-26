@@ -1,19 +1,14 @@
 {
   "name": "Agritalia",
   "short_name": "Agritalia",
-  "start_url": "./index.html",
+  "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#f9fdf9",
-  "theme_color": "#4CAF50",
+  "background_color": "#ffffff",
+  "theme_color": "#2e7d32",
   "icons": [
     {
-      "src": "icon192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "icon512.png",
-      "sizes": "512x512",
+      "src": "favicon.png",
+      "sizes": "193x192",
       "type": "image/png"
     }
   ]

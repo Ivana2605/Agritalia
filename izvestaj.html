@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Izveštaj - Agritalia</title>
+  <link rel="icon" href="favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Rubik', sans-serif;
+      margin: 0;
+      padding: 10px;
+      background-color: #f7f7f7;
+      color: #2e7d32;
+      max-width: 480px;
+      margin: auto;
+    }
+
+    .logo {
+      max-width: 150px;
+      height: auto;
+      display: block;
+      margin: 20px auto;
+    }
+
+    label, input, button {
+      display: block;
+      width: 100%;
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 10px;
+    }
+
+    input[type="date"], button {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #2e7d32;
+      color: white;
+      border: none;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    #reportResults {
+      margin-top: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      table-layout: fixed;
+      word-wrap: break-word;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 6px;
+      border-bottom: 1px solid #ccc;
+      font-size: 14px;
+      vertical-align: middle;
+    }
+
+    th {
+      background-color: #e0f2e9;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    hr {
+      margin: 30px 0 10px;
+    }
+
+    .back-btn {
+      background-color: #ccc;
+      color: #2e7d32;
+      font-weight: bold;
+      margin-top: 30px;
+    }
+
+    .delete-btn {
+      background-color: transparent;
+      color: #d32f2f;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .delete-btn:hover {
+      color: #b71c1c;
+    }
+  </style>
+</head>
+<body>
+  <img src="logo.png" alt="Agritalia Logo" class="logo" />
+
+  <form id="dayReportForm">
+    <label for="reportDate">Izaberi datum za prikaz izveštaja:</label>
+    <input type="date" id="reportDate" name="reportDate" />
+  </form>
+
+  <div id="reportResults"></div>
+
+  <hr />
+
+  <label for="startDate">Od datuma:</label>
+  <input type="date" id="startDate" name="startDate" />
+
+  <label for="endDate">Do datuma:</label>
+  <input type="date" id="endDate" name="endDate" />
+
+  <button id="generateReport">Prikaži izveštaj za period</button>
+
+  <button onclick="window.location.href='index.html'" class="back-btn">
+    ← Nazad na unos podataka
+  </button>
+
+  <script>
+    function formatDatumISOuSR(isoDatum) {
+      const [god, mesec, dan] = isoDatum.split("-");
+      return `${dan}.${mesec}.${god}`;
+    }
+
+    function getHarvestData() {
+      const data = localStorage.getItem('berbaMalinaPodaci');
+      try {
+        return data ? JSON.parse(data) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function renderTable(report, title) {
+      const totalRevenue = report.quantity * report.price;
+      const netProfit = totalRevenue - report.laborCost;
+      return `
+        <table>
+          <tr><th>Ukupna količina</th><td>${report.quantity.toFixed(2)} kg</td></tr>
+          <tr><th>Prosečna cena</th><td>${report.price.toFixed(2)} RSD</td></tr>
+          <tr><th>Ukupan prihod</th><td>${totalRevenue.toFixed(2)} RSD</td></tr>
+          <tr><th>Ukupno sati rada</th><td>${report.hoursWorked.toFixed(2)} sati</td></tr>
+          <tr><th>Trošak za berače</th><td>${report.laborCost.toFixed(2)} RSD</td></tr>
+          <tr><th>Neto zarada</th><td>${netProfit.toFixed(2)} RSD</td></tr>
+        </table>
+      `;
+    }
+
+    function renderTableWithDelete(entries) {
+      let html = `<table>
+        <thead>
+          <tr>
+            <th>Datum</th>
+            <th>Kg</th>
+            <th>Cena</th>
+            <th>Berači</th>
+            <th>Sati</th>
+            <th>Trošak</th>
+            <th>Prihod</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+      entries.forEach((entry, index) => {
+        const prihod = entry.kolicina * entry.cena;
+        html += `
+          <tr>
+            <td>${formatDatumISOuSR(entry.datum)}</td>
+            <td>${entry.kolicina.toFixed(2)}</td>
+            <td>${entry.cena.toFixed(2)}</td>
+            <td>${entry.beraci}</td>
+            <td>${entry.sati.toFixed(2)}</td>
+            <td>${entry.trosakSat.toFixed(2)}</td>
+            <td>${prihod.toFixed(2)}</td>
+            <td><button class="delete-btn" data-index="${index}">🗑</button></td>
+          </tr>`;
+      });
+
+      html += `</tbody></table>`;
+      return html;
+    }
+
+    function showDayReport(dateInput) {
+      if (!dateInput) return;
+      const data = getHarvestData();
+      const entries = data.filter(entry => entry.datum === dateInput);
+      if (entries.length === 0) {
+        document.getElementById('reportResults').innerHTML = "Nema podataka za izabrani datum.";
+        return;
+      }
+
+      let totalQty = 0, totalRevenue = 0, totalHours = 0, totalCost = 0, totalPrice = 0;
+      entries.forEach(entry => {
+        totalQty += entry.kolicina;
+        totalRevenue += entry.kolicina * entry.cena;
+        totalHours += entry.sati;
+        totalCost += entry.sati * entry.trosakSat;
+        totalPrice += entry.cena * entry.kolicina;
+      });
+      const avgPrice = totalPrice / totalQty;
+
+      const summary = {
+        quantity: totalQty,
+        price: avgPrice,
+        hoursWorked: totalHours,
+        laborCost: totalCost
+      };
+
+      document.getElementById('reportResults').innerHTML =
+        `<h3>Izveštaj za datum: ${formatDatumISOuSR(dateInput)}</h3>` +
+        renderTable(summary, '') +
+        renderTableWithDelete(entries);
+
+      document.querySelectorAll(".delete-btn").forEach(btn => {
+        btn.addEventListener("click", function () {
+          const index = parseInt(this.dataset.index);
+          data.splice(index, 1);
+          localStorage.setItem("berbaMalinaPodaci", JSON.stringify(data));
+          showDayReport(dateInput);
+        });
+      });
+    }
+
+    document.getElementById('reportDate').addEventListener('change', function () {
+      const selectedDate = this.value;
+      localStorage.setItem('lastSelectedDate', selectedDate);
+      showDayReport(selectedDate);
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const selectedDate = localStorage.getItem('lastSelectedDate');
+      if (selectedDate) {
+        document.getElementById('reportDate').value = selectedDate;
+        showDayReport(selectedDate);
+      }
+    });
+
+    document.getElementById('generateReport').addEventListener('click', function () {
+      const startDate = new Date(document.getElementById('startDate').value);
+      const endDate = new Date(document.getElementById('endDate').value);
+      if (isNaN(startDate) || isNaN(endDate)) {
+        alert("Molimo unesite oba datuma.");
+        return;
+      }
+
+      const data = getHarvestData();
+      const filtered = data.filter(entry => {
+        const entryDate = new Date(entry.datum);
+        return entryDate >= startDate && entryDate <= endDate;
+      });
+
+      if (filtered.length === 0) {
+        document.getElementById('reportResults').innerHTML = "Nema podataka za izabrani period.";
+        return;
+      }
+
+      let totalQty = 0, totalRevenue = 0, totalHours = 0, totalCost = 0, totalPrice = 0;
+      filtered.forEach(entry => {
+        totalQty += entry.kolicina;
+        totalRevenue += entry.kolicina * entry.cena;
+        totalHours += entry.sati;
+        totalCost += entry.sati * entry.trosakSat;
+        totalPrice += entry.cena * entry.kolicina;
+      });
+      const avgPrice = totalPrice / totalQty;
+
+      const summary = {
+        quantity: totalQty,
+        price: avgPrice,
+        hoursWorked: totalHours,
+        laborCost: totalCost
+      };
+
+      document.getElementById('reportResults').innerHTML =
+        `<h3>Izveštaj za period</h3>` + renderTable(summary, '');
+    });
+  </script>
+</body>
+</html>

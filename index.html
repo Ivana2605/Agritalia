@@ -1,299 +1,109 @@
 <!DOCTYPE html>
 <html lang="sr">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Berba Malina - Agritalia</title>
-    <link rel="icon" href="icon.png" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 10px;
-            background: #f9fdf9;
-            max-width: 480px;
-            margin-left: auto;
-            margin-right: auto;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Početna - Agritalia</title>
+  <link rel="icon" href="favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Rubik', sans-serif;
+      margin: 0;
+      padding: 10px;
+      background-color: #f7f7f7;
+      color: #2e7d32;
+      max-width: 480px;
+      margin: auto;
+    }
 
-        header {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 10px;
-            border-bottom: 2px solid #4CAF50;
-        }
+    .logo {
+      max-width: 150px;
+      height: auto;
+      display: block;
+      margin: 20px auto;
+    }
 
-            header img {
-                height: 40px;
-            }
+    label, input, button {
+      display: block;
+      width: 100%;
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 10px;
+    }
 
-        h2 {
-            color: #4CAF50;
-        }
+    input[type="date"],
+    input[type="number"],
+    button {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
 
-        form label {
-            font-weight: bold;
-            display: block;
-            margin-top: 10px;
-        }
+    button {
+      background-color: #2e7d32;
+      color: white;
+      border: none;
+      font-weight: bold;
+      margin-top: 10px;
+    }
 
-        form input, form button {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            box-sizing: border-box;
-            font-size: 1rem;
-        }
-
-        button {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            margin-top: 15px;
-            cursor: pointer;
-        }
-
-            button:hover {
-                background: #45a049;
-            }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            table-layout: fixed; /* fiksne kolone */
-        }
-
-        th, td {
-            border: 1px solid #ccc;
-            padding: 4px 6px;
-            text-align: center;
-            font-size: 0.85rem;
-            white-space: normal; /* prelamanje teksta */
-            overflow-wrap: break-word;
-            word-break: break-word;
-        }
-            /* Fiksne širine kolona, ukupno 100% */
-            th:nth-child(1), td:nth-child(1) {
-                width: 20%;
-            }
-            /* Datum */
-            th:nth-child(2), td:nth-child(2) {
-                width: 13%;
-            }
-            /* Kol. */
-            th:nth-child(3), td:nth-child(3) {
-                width: 13%;
-            }
-            /* Cena/kg */
-            th:nth-child(4), td:nth-child(4) {
-                width: 18%;
-            }
-            /* Prihod */
-            th:nth-child(5), td:nth-child(5) {
-                width: 13%;
-            }
-            /* Sati */
-            th:nth-child(6), td:nth-child(6) {
-                width: 13%;
-            }
-            /* Trošak */
-            th:nth-child(7), td:nth-child(7) {
-                width: 10%;
-            }
-        /* Neto */
-
-        .neto-zarada {
-            background-color: #d0f5d0;
-            font-weight: bold;
-            color: #2e7d32;
-            font-size: 1rem;
-        }
-
-        .izvestaj-naslov {
-            color: #4CAF50;
-            font-size: 1.2rem;
-            margin-top: 20px;
-        }
-    </style>
+    form {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <img src="logo.png" alt="Agritalia Logo">
-    </header>
+  <img src="logo.png" alt="Agritalia Logo" class="logo" />
 
-    <h2>Unos podataka berbe</h2>
-    <form id="formBerba">
-        <label>Datum berbe:</label>
-        <input type="date" id="datum" required style="font-size: 1.2rem;">
+  <form id="berbaForm">
+    <label for="datum">Datum berbe:</label>
+    <input type="date" id="datum" name="datum" required />
 
-        <label>Količina (kg):</label>
-        <input type="number" id="kolicina" step="0.1" required>
+    <label for="kolicina">Količina (kg):</label>
+    <input type="number" id="kolicina" name="kolicina" step="0.01" required />
 
-        <label>Prodajna cena po kg (din):</label>
-        <input type="number" id="cena" required>
+    <label for="cena">Prodajna cena po kg (RSD):</label>
+    <input type="number" id="cena" name="cena" step="0.01" required />
 
-        <label>Broj berača:</label>
-        <input type="number" id="beraci" required>
+    <label for="beraci">Broj berača:</label>
+    <input type="number" id="beraci" name="beraci" required />
 
-        <label>Ukupan broj sati:</label>
-        <input type="number" id="sati" required>
+    <label for="sati">Ukupan broj sati rada:</label>
+    <input type="number" id="sati" name="sati" step="0.1" required />
 
-        <label>Trošak po satu (din):</label>
-        <input type="number" id="trosak" required>
+    <label for="trosakSat">Trošak po satu (RSD):</label>
+    <input type="number" id="trosakSat" name="trosakSat" step="0.01" required />
 
-        <button type="submit">Sačuvaj unos</button>
-        <button type="button" onclick="prikaziIzvestajZaDan()">Izveštaj za dan</button>
-        <button type="button" onclick="obrisiPoDatumu()">Obriši unos za dan</button>
-    </form>
+    <button type="submit">Sačuvaj i prikaži izveštaj</button>
+  </form>
 
-    <div class="izvestaj-naslov" style="margin-top:25px; color:#4CAF50;">
-        Izveštaj od
-        <input type="date" id="od" style="font-size:1rem; margin-left:10px; margin-right:10px;">
-        do
-        <input type="date" id="do" style="font-size:1rem; margin-left:10px; margin-right:10px;">
-    </div>
-    <button onclick="filtriraj()">Prikaži izveštaj</button>
-    <button onclick="exportToExcel()">📊 Excel</button>
-    <button onclick="exportToPDF()">📄 PDF</button>
+  <script>
+    document.getElementById("berbaForm").addEventListener("submit", function (e) {
+      e.preventDefault();
 
-    <div id="izvestaj"></div>
+      const noviUnos = {
+        datum: this.datum.value,
+        kolicina: parseFloat(this.kolicina.value),
+        cena: parseFloat(this.cena.value),
+        beraci: parseInt(this.beraci.value),
+        sati: parseFloat(this.sati.value),
+        trosakSat: parseFloat(this.trosakSat.value)
+      };
 
-    <script>
-        let podaci = JSON.parse(localStorage.getItem("berbe")) || [];
-
-        document.getElementById("formBerba").addEventListener("submit", function (e) {
-            e.preventDefault();
-            const datum = document.getElementById("datum").value;
-            const kolicina = parseFloat(document.getElementById("kolicina").value);
-            const cena = parseFloat(document.getElementById("cena").value);
-            const beraci = parseInt(document.getElementById("beraci").value);
-            const sati = parseInt(document.getElementById("sati").value);
-            const trosak = parseFloat(document.getElementById("trosak").value);
-
-            if (!datum || isNaN(kolicina) || isNaN(cena) || isNaN(beraci) || isNaN(sati) || isNaN(trosak)) {
-                alert("Molimo popunite sva polja ispravno.");
-                return;
-            }
-
-            const prihod = kolicina * cena;
-            const ukupnoTrosak = sati * trosak;
-            const neto = prihod - ukupnoTrosak;
-
-            podaci.push({ datum, kolicina, cena, prihod, sati, ukupnoTrosak, neto });
-            localStorage.setItem("berbe", JSON.stringify(podaci));
-            alert("Podaci su sačuvani.");
-            document.getElementById("formBerba").reset();
-        });
-
-        function prikaziIzvestajZaDan() {
-            const datum = document.getElementById("datum").value;
-            if (!datum) {
-                alert("Izaberite datum za izveštaj.");
-                return;
-            }
-            const dani = podaci.filter(d => d.datum === datum);
-            if (dani.length === 0) {
-                document.getElementById("izvestaj").innerHTML = "<p>Nema podataka za taj dan.</p>";
-                return;
-            }
-            prikaziTabelu(dani, `Izveštaj za ${formatirajDatum(datum)}`);
-        }
-
-        function filtriraj() {
-            const od = document.getElementById("od").value;
-            const doD = document.getElementById("do").value;
-            if (!od || !doD) {
-                alert("Izaberite oba datuma za filtriranje.");
-                return;
-            }
-            if (od > doD) {
-                alert("Datum 'od' ne može biti veći od datuma 'do'.");
-                return;
-            }
-            const filtrirani = podaci.filter(p => p.datum >= od && p.datum <= doD);
-            if (filtrirani.length === 0) {
-                document.getElementById("izvestaj").innerHTML = "<p>Nema podataka za taj period.</p>";
-                return;
-            }
-            prikaziTabelu(filtrirani, `Izveštaj od ${formatirajDatum(od)} do ${formatirajDatum(doD)}`);
-        }
-
-        function prikaziTabelu(niz, naslov) {
-            let html = `<h3 style='color:#4CAF50;'>${naslov}</h3><table><tr><th>Datum</th><th>Kol.</th><th>Cena/kg</th><th>Prihod</th><th>Sati</th><th>Trošak</th><th>Neto</th></tr>`;
-            niz.forEach(p => {
-                html += `<tr>
-              <td>${formatirajDatum(p.datum)}</td>
-              <td>${p.kolicina.toFixed(2)}</td>
-              <td>${p.cena.toFixed(2)}</td>
-              <td>${p.prihod.toFixed(2)}</td>
-              <td>${p.sati}</td>
-              <td>${p.ukupnoTrosak.toFixed(2)}</td>
-              <td class='neto-zarada'>${p.neto.toFixed(2)}</td>
-            </tr>`;
-            });
-            html += "</table>";
-            document.getElementById("izvestaj").innerHTML = html;
-        }
-
-        function formatirajDatum(d) {
-            const [y, m, day] = d.split("-");
-            return `${day}.${m}.${y}`;
-        }
-
-        function exportToExcel() {
-            const tabela = document.querySelector("#izvestaj table");
-            if (!tabela) return alert("Nema izveštaja za izvoz.");
-            const wb = XLSX.utils.table_to_book(tabela);
-            XLSX.writeFile(wb, "IzvestajBerba.xlsx");
-        }
-
-        function exportToPDF() {
-            const tabela = document.querySelector("#izvestaj");
-            if (!tabela || tabela.innerHTML.trim() === "") return alert("Nema izveštaja za izvoz.");
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-
-            doc.setFontSize(16);
-            doc.setTextColor(76, 175, 80);
-            doc.text("Izveštaj o berbi maline", 10, 10);
-
-            doc.setFontSize(10);
-            doc.setTextColor(0, 0, 0);
-            doc.html(tabela, {
-                x: 10,
-                y: 20,
-                callback: function () {
-                    doc.save("IzvestajBerba.pdf");
-                }
-            });
-        }
-
-        function obrisiPoDatumu() {
-            const datum = document.getElementById("datum").value;
-            if (!datum) {
-                alert("Unesite datum za brisanje.");
-                return;
-            }
-            if (!confirm(`Da li sigurno želite da obrišete unos za datum ${formatirajDatum(datum)}?`)) return;
-            podaci = podaci.filter(p => p.datum !== datum);
-            localStorage.setItem("berbe", JSON.stringify(podaci));
-            alert("Unos za taj dan je obrisan.");
-            document.getElementById("izvestaj").innerHTML = "";
-        }
-    </script>
+      let podaci = localStorage.getItem("berbaMalinaPodaci");
+      podaci = podaci ? JSON.parse(podaci) : [];
+      podaci.push(noviUnos);
+      localStorage.setItem("berbaMalinaPodaci", JSON.stringify(podaci));
+      localStorage.setItem("lastSelectedDate", noviUnos.datum);
+      window.location.href = "izvestaj.html";
+    });
+  </script>
 </body>
 </html>
-
-
-
-
-
-
 
 
