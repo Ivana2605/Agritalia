@@ -2,287 +2,312 @@
 <html lang="sr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Izveštaj - Agritalia</title>
-  <link rel="icon" href="favicon.png" />
-  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="icon-192.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet" />
   <style>
     body {
       font-family: 'Rubik', sans-serif;
-      margin: 0;
-      padding: 10px;
-      background-color: #f7f7f7;
-      color: #2e7d32;
       max-width: 480px;
-      margin: auto;
+      margin: 0 auto;
+      background: #f7f7f7;
+      color: #2e7d32;
+      padding: 10px;
     }
-
     .logo {
       max-width: 150px;
-      height: auto;
       display: block;
       margin: 20px auto;
     }
-
-    label, input, button {
-      display: block;
-      width: 100%;
-      font-size: 16px;
-      font-weight: 500;
-      margin-bottom: 10px;
+    h2, h3 {
+      text-align: center;
     }
-
-    input[type="date"], button {
-      padding: 10px;
+    .entry {
+      background: white;
       border-radius: 8px;
+      padding: 10px;
+      margin: 10px 0;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    .entry div {
+      margin: 3px 0;
+    }
+    button {
+      background: #2e7d32;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      width: 100%;
+      font-weight: bold;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #27682c;
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      border-radius: 5px;
       border: 1px solid #ccc;
       box-sizing: border-box;
     }
-
-    button {
-      background-color: #2e7d32;
+    /* Stil za dugme za brisanje unosa */
+    .entry button.delete-btn {
+      margin-top: 8px;
+      background-color: #d32f2f;
       color: white;
       border: none;
-      font-weight: bold;
-      margin-top: 10px;
-    }
-
-    #reportResults {
-      margin-top: 20px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-      table-layout: fixed;
-      word-wrap: break-word;
-    }
-
-    th, td {
-      text-align: left;
-      padding: 6px;
-      border-bottom: 1px solid #ccc;
-      font-size: 14px;
-      vertical-align: middle;
-    }
-
-    th {
-      background-color: #e0f2e9;
-      font-weight: 700;
-      font-size: 14px;
-    }
-
-    hr {
-      margin: 30px 0 10px;
-    }
-
-    .back-btn {
-      background-color: #ccc;
-      color: #2e7d32;
-      font-weight: bold;
-      margin-top: 30px;
-    }
-
-    .delete-btn {
-      background-color: transparent;
-      color: #d32f2f;
-      border: none;
-      font-size: 18px;
+      padding: 6px 12px;
+      border-radius: 6px;
       cursor: pointer;
-      padding: 0;
+      font-weight: bold;
+      width: auto;
     }
-
-    .delete-btn:hover {
-      color: #b71c1c;
+    .entry button.delete-btn:hover {
+      background-color: #b71c1c;
     }
   </style>
 </head>
 <body>
-  <img src="logo.png" alt="Agritalia Logo" class="logo" />
+  <img src="logo.png" class="logo" alt="Agritalia Logo" />
+  <h2>Izveštaj</h2>
 
-  <form id="dayReportForm">
-    <label for="reportDate">Izaberi datum za prikaz izveštaja:</label>
-    <input type="date" id="reportDate" name="reportDate" />
-  </form>
+  <div id="individualReport"></div>
 
-  <div id="reportResults"></div>
+  <h3>Pojedinačni unosi za datum</h3>
+  <div id="pojedinacniUnosi"></div>
 
   <hr />
 
-  <label for="startDate">Od datuma:</label>
-  <input type="date" id="startDate" name="startDate" />
+  <label for="startDate">Od:</label>
+  <input type="date" id="startDate" />
+  <label for="endDate">Do:</label>
+  <input type="date" id="endDate" />
+  <button id="filterBtn">Prikaži izveštaj za period</button>
 
-  <label for="endDate">Do datuma:</label>
-  <input type="date" id="endDate" name="endDate" />
+  <div id="periodReport"></div>
 
-  <button id="generateReport">Prikaži izveštaj za period</button>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, query, where, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-  <button onclick="window.location.href='index.html'" class="back-btn">
-    ← Nazad na unos podataka
-  </button>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBGeFazvjgtDUbB-VSJlEcXDe4bW-r0sJs",
+      authDomain: "agritalia-app.firebaseapp.com",
+      projectId: "agritalia-app",
+      storageBucket: "agritalia-app.appspot.com",
+      messagingSenderId: "935329247921",
+      appId: "1:935329247921:web:d9de1aa832e2432170a890"
+    };
 
-  <script>
-    function formatDatumISOuSR(isoDatum) {
-      const [god, mesec, dan] = isoDatum.split("-");
-      return `${dan}.${mesec}.${god}`;
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const individualReportDiv = document.getElementById("individualReport");
+    const periodReportDiv = document.getElementById("periodReport");
+    const filterBtn = document.getElementById("filterBtn");
+
+    function getQueryParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
     }
 
-    function getHarvestData() {
-      const data = localStorage.getItem('berbaMalinaPodaci');
-      try {
-        return data ? JSON.parse(data) : [];
-      } catch (e) {
-        return [];
-      }
+    function formatDateSR(dateStr) {
+      const [year, month, day] = dateStr.split("-");
+      return `${day}.${month}.${year}`;
     }
 
-    function renderTable(report, title) {
-      const totalRevenue = report.quantity * report.price;
-      const netProfit = totalRevenue - report.laborCost;
-      return `
-        <table>
-          <tr><th>Ukupna količina</th><td>${report.quantity.toFixed(2)} kg</td></tr>
-          <tr><th>Prosečna cena</th><td>${report.price.toFixed(2)} RSD</td></tr>
-          <tr><th>Ukupan prihod</th><td>${totalRevenue.toFixed(2)} RSD</td></tr>
-          <tr><th>Ukupno sati rada</th><td>${report.hoursWorked.toFixed(2)} sati</td></tr>
-          <tr><th>Trošak za berače</th><td>${report.laborCost.toFixed(2)} RSD</td></tr>
-          <tr><th>Neto zarada</th><td>${netProfit.toFixed(2)} RSD</td></tr>
-        </table>
-      `;
-    }
+    async function loadReportForDate(user, date) {
+      const berbaRef = collection(db, "berba");
+      const q = query(berbaRef, where("userId", "==", user.uid));
+      const snapshot = await getDocs(q);
 
-    function renderTableWithDelete(entries) {
-      let html = `<table>
-        <thead>
-          <tr>
-            <th>Datum</th>
-            <th>Kg</th>
-            <th>Cena</th>
-            <th>Berači</th>
-            <th>Sati</th>
-            <th>Trošak</th>
-            <th>Prihod</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>`;
-
-      entries.forEach((entry, index) => {
-        const prihod = entry.kolicina * entry.cena;
-        html += `
-          <tr>
-            <td>${formatDatumISOuSR(entry.datum)}</td>
-            <td>${entry.kolicina.toFixed(2)}</td>
-            <td>${entry.cena.toFixed(2)}</td>
-            <td>${entry.beraci}</td>
-            <td>${entry.sati.toFixed(2)}</td>
-            <td>${entry.trosakSat.toFixed(2)}</td>
-            <td>${prihod.toFixed(2)}</td>
-            <td><button class="delete-btn" data-index="${index}">🗑</button></td>
-          </tr>`;
+      const entries = [];
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data.datum === date) {
+          entries.push(data);
+        }
       });
 
-      html += `</tbody></table>`;
-      return html;
-    }
+      individualReportDiv.innerHTML = "";
 
-    function showDayReport(dateInput) {
-      if (!dateInput) return;
-      const data = getHarvestData();
-      const entries = data.filter(entry => entry.datum === dateInput);
       if (entries.length === 0) {
-        document.getElementById('reportResults').innerHTML = "Nema podataka za izabrani datum.";
+        individualReportDiv.innerHTML = `<p>Nema podataka za datum ${formatDateSR(date)}.</p>`;
         return;
       }
 
-      let totalQty = 0, totalRevenue = 0, totalHours = 0, totalCost = 0, totalPrice = 0;
-      entries.forEach(entry => {
-        totalQty += entry.kolicina;
-        totalRevenue += entry.kolicina * entry.cena;
-        totalHours += entry.sati;
-        totalCost += entry.sati * entry.trosakSat;
-        totalPrice += entry.cena * entry.kolicina;
+      let ukupnaKolicina = 0;
+      let ukupnaCenaTezina = 0;
+      let ukupnoPrihod = 0;
+      let ukupnoSati = 0;
+      let ukupnoTrosak = 0;
+
+      entries.forEach(e => {
+        ukupnaKolicina += e.kolicina;
+        ukupnaCenaTezina += e.cena * e.kolicina;
+        ukupnoPrihod += e.kolicina * e.cena;
+        ukupnoSati += e.sati;
+        ukupnoTrosak += e.sati * e.trosakSat;
       });
-      const avgPrice = totalPrice / totalQty;
 
-      const summary = {
-        quantity: totalQty,
-        price: avgPrice,
-        hoursWorked: totalHours,
-        laborCost: totalCost
-      };
+      const prosecnaCena = ukupnaCenaTezina / ukupnaKolicina;
+      const netoZarada = ukupnoPrihod - ukupnoTrosak;
 
-      document.getElementById('reportResults').innerHTML =
-        `<h3>Izveštaj za datum: ${formatDatumISOuSR(dateInput)}</h3>` +
-        renderTable(summary, '') +
-        renderTableWithDelete(entries);
+      individualReportDiv.innerHTML = `
+        <div class="entry">
+          <div><strong>Izveštaj za datum:</strong> ${formatDateSR(date)}</div>
+          <div>Ukupna količina: ${ukupnaKolicina.toFixed(2)} kg</div>
+          <div>Prosečna cena: ${prosecnaCena.toFixed(2)} RSD</div>
+          <div>Ukupan prihod: ${ukupnoPrihod.toFixed(2)} RSD</div>
+          <div>Ukupno sati rada: ${ukupnoSati.toFixed(2)}</div>
+          <div>Trošak za berače: ${ukupnoTrosak.toFixed(2)} RSD</div>
+          <div>Neto zarada: ${netoZarada.toFixed(2)} RSD</div>
+        </div>
+      `;
+    }
 
-      document.querySelectorAll(".delete-btn").forEach(btn => {
-        btn.addEventListener("click", function () {
-          const index = parseInt(this.dataset.index);
-          data.splice(index, 1);
-          localStorage.setItem("berbaMalinaPodaci", JSON.stringify(data));
-          showDayReport(dateInput);
+    async function prikaziPojedinacneUnose(user, date) {
+      const berbaRef = collection(db, "berba");
+      const q = query(berbaRef, where("userId", "==", user.uid));
+      const snapshot = await getDocs(q);
+
+      const unosiZaDatum = [];
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data.datum === date) {
+          unosiZaDatum.push({ id: docSnap.id, ...data });
+        }
+      });
+
+      const container = document.getElementById("pojedinacniUnosi");
+      container.innerHTML = "";
+
+      if (unosiZaDatum.length === 0) {
+        container.innerHTML = "<p>Nema unosa za ovaj datum.</p>";
+        return;
+      }
+
+      unosiZaDatum.forEach(unos => {
+        const div = document.createElement("div");
+        div.className = "entry";
+        div.innerHTML = `
+          <div><strong>Količina:</strong> ${unos.kolicina.toFixed(2)} kg</div>
+          <div><strong>Cena:</strong> ${unos.cena.toFixed(2)} RSD</div>
+          <div><strong>Berači:</strong> ${unos.beraci}</div>
+          <div><strong>Sati:</strong> ${unos.sati.toFixed(2)}</div>
+          <div><strong>Trošak/sat:</strong> ${unos.trosakSat.toFixed(2)} RSD</div>
+          <button class="delete-btn" data-id="${unos.id}">Obriši unos</button>
+        `;
+
+        container.appendChild(div);
+
+        const btn = div.querySelector("button.delete-btn");
+        btn.addEventListener("click", async () => {
+          if (confirm("Da li ste sigurni da želite da obrišete ovaj unos?")) {
+            try {
+              await deleteDoc(doc(db, "berba", unos.id));
+              alert("Unos obrisan.");
+              // osveži izveštaj i listu unosa
+              await loadReportForDate(user, date);
+              await prikaziPojedinacneUnose(user, date);
+            } catch (e) {
+              alert("Greška pri brisanju: " + e.message);
+            }
+          }
         });
       });
     }
 
-    document.getElementById('reportDate').addEventListener('change', function () {
-      const selectedDate = this.value;
-      localStorage.setItem('lastSelectedDate', selectedDate);
-      showDayReport(selectedDate);
-    });
+    async function loadReportForPeriod(user, startDate, endDate) {
+      const berbaRef = collection(db, "berba");
+      const q = query(berbaRef, where("userId", "==", user.uid));
+      const snapshot = await getDocs(q);
 
-    window.addEventListener('DOMContentLoaded', () => {
-      const selectedDate = localStorage.getItem('lastSelectedDate');
-      if (selectedDate) {
-        document.getElementById('reportDate').value = selectedDate;
-        showDayReport(selectedDate);
-      }
-    });
+      const entries = [];
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data.datum >= startDate && data.datum <= endDate) {
+          entries.push(data);
+        }
+      });
 
-    document.getElementById('generateReport').addEventListener('click', function () {
-      const startDate = new Date(document.getElementById('startDate').value);
-      const endDate = new Date(document.getElementById('endDate').value);
-      if (isNaN(startDate) || isNaN(endDate)) {
-        alert("Molimo unesite oba datuma.");
+      periodReportDiv.innerHTML = "";
+
+      if (entries.length === 0) {
+        periodReportDiv.innerHTML = `<p>Nema podataka za period od ${formatDateSR(startDate)} do ${formatDateSR(endDate)}.</p>`;
         return;
       }
 
-      const data = getHarvestData();
-      const filtered = data.filter(entry => {
-        const entryDate = new Date(entry.datum);
-        return entryDate >= startDate && entryDate <= endDate;
+      let ukupnaKolicina = 0;
+      let ukupnaCenaTezina = 0;
+      let ukupnoPrihod = 0;
+      let ukupnoSati = 0;
+      let ukupnoTrosak = 0;
+
+      entries.forEach(e => {
+        ukupnaKolicina += e.kolicina;
+        ukupnaCenaTezina += e.cena * e.kolicina;
+        ukupnoPrihod += e.kolicina * e.cena;
+        ukupnoSati += e.sati;
+        ukupnoTrosak += e.sati * e.trosakSat;
       });
 
-      if (filtered.length === 0) {
-        document.getElementById('reportResults').innerHTML = "Nema podataka za izabrani period.";
+      const prosecnaCena = ukupnaCenaTezina / ukupnaKolicina;
+      const netoZarada = ukupnoPrihod - ukupnoTrosak;
+
+      periodReportDiv.innerHTML = `
+        <div class="entry">
+          <div><strong>Izveštaj za period:</strong> ${formatDateSR(startDate)} - ${formatDateSR(endDate)}</div>
+          <div>Ukupna količina: ${ukupnaKolicina.toFixed(2)} kg</div>
+          <div>Prosečna cena: ${prosecnaCena.toFixed(2)} RSD</div>
+          <div>Ukupan prihod: ${ukupnoPrihod.toFixed(2)} RSD</div>
+          <div>Ukupno sati rada: ${ukupnoSati.toFixed(2)}</div>
+          <div>Trošak za berače: ${ukupnoTrosak.toFixed(2)} RSD</div>
+          <div>Neto zarada: ${netoZarada.toFixed(2)} RSD</div>
+        </div>
+      `;
+    }
+
+    onAuthStateChanged(auth, user => {
+      if (!user) {
+        alert("Niste prijavljeni! Bićete preusmereni na početnu stranu.");
+        window.location.href = "index.html";
         return;
       }
 
-      let totalQty = 0, totalRevenue = 0, totalHours = 0, totalCost = 0, totalPrice = 0;
-      filtered.forEach(entry => {
-        totalQty += entry.kolicina;
-        totalRevenue += entry.kolicina * entry.cena;
-        totalHours += entry.sati;
-        totalCost += entry.sati * entry.trosakSat;
-        totalPrice += entry.cena * entry.kolicina;
+      const datum = getQueryParam("datum");
+      if (!datum) {
+        individualReportDiv.innerHTML = "<p style='color:red; text-align:center;'>Nije prosleđen datum za izveštaj.</p>";
+        return;
+      }
+
+      loadReportForDate(user, datum);
+      prikaziPojedinacneUnose(user, datum);
+
+      filterBtn.addEventListener("click", () => {
+        const start = document.getElementById("startDate").value;
+        const end = document.getElementById("endDate").value;
+
+        if (!start || !end) {
+          alert("Molimo unesite oba datuma.");
+          return;
+        }
+        if (start > end) {
+          alert("Datum početka ne može biti posle datuma kraja.");
+          return;
+        }
+        loadReportForPeriod(user, start, end);
       });
-      const avgPrice = totalPrice / totalQty;
-
-      const summary = {
-        quantity: totalQty,
-        price: avgPrice,
-        hoursWorked: totalHours,
-        laborCost: totalCost
-      };
-
-      document.getElementById('reportResults').innerHTML =
-        `<h3>Izveštaj za period</h3>` + renderTable(summary, '');
     });
   </script>
 </body>
