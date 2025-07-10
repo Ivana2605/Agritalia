@@ -62,6 +62,15 @@
     button:hover {
       background-color: #27682c;
     }
+    /* Dugme Nazad sa posebnim stilom */
+    #btnNazad {
+      background-color: #ccc;
+      color: #2e7d32;
+      margin-top: 10px;
+    }
+    #btnNazad:hover {
+      background-color: #b3b3b3;
+    }
   </style>
 </head>
 <body>
@@ -89,6 +98,8 @@
 
     <button type="submit">Sačuvaj i prikaži izveštaj</button>
   </form>
+
+  <button id="btnNazad">Nazad</button>
 
   <script type="module">
     import { auth, db } from './firebase-config.js';
@@ -141,6 +152,11 @@
       } catch (error) {
         alert("Greška pri čuvanju podataka: " + error.message);
       }
+    });
+
+    const btnNazad = document.getElementById('btnNazad');
+    btnNazad.addEventListener('click', () => {
+      window.history.back();
     });
   </script>
 </body>

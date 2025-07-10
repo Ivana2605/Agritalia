@@ -84,6 +84,21 @@
             border: 1px solid #ccc;
             box-sizing: border-box;
         }
+        /* Novo dugme Nazad unutar forme */
+        #btnNazadForm {
+            background-color: #f0f0f0;
+            color: #2e7d32;
+            border: 2px solid #2e7d32;
+            font-weight: 700;
+            border-radius: 8px;
+            margin-top: 10px;
+            width: 100%;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #btnNazadForm:hover {
+            background-color: #d7e5d7;
+        }
     </style>
 </head>
 <body>
@@ -103,6 +118,8 @@
         <label for="datumDo">Datum do:</label>
         <input type="date" id="datumDo" required />
         <button type="submit">Prikaži izveštaj za period</button>
+        <!-- Novo dugme nazad ispod dugmeta Prikaži izveštaj -->
+        <button type="button" id="btnNazadForm">⬅ Nazad</button>
     </form>
 
     <script type="module">
@@ -309,6 +326,10 @@
         });
 
         document.getElementById("btnNazad").addEventListener("click", () => {
+            window.location.href = "dashboard.html";
+        });
+
+        document.getElementById("btnNazadForm").addEventListener("click", () => {
             window.location.href = "dashboard.html";
         });
 

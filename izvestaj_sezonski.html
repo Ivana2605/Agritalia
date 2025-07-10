@@ -84,6 +84,24 @@
             border: 1px solid #ccc;
             box-sizing: border-box;
         }
+        /* Stil za dugme Nazad */
+        #btnNazad {
+            background-color: #e0e0e0; /* siva pozadina */
+            border: 2px solid #2e7d32; /* zelena ivica */
+            color: #2e7d32; /* zeleni tekst */
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            margin-top: 10px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        #btnNazad:hover {
+            background-color: #c8e6c9; /* svetlo zelena pozadina na hover */
+            color: #1b5e20; /* tamnija zelena tekst na hover */
+        }
     </style>
 </head>
 <body>
@@ -94,8 +112,6 @@
     <div id="reportDate" style="text-align:center; font-weight:600; margin-bottom:10px;"></div>
     <div id="reportContent"></div>
 
-    <button id="btnNazad">⬅ Nazad</button>
-
     <form id="periodForm">
         <h3>Prikaži izveštaj za period</h3>
         <label for="datumOd">Datum od:</label>
@@ -103,6 +119,8 @@
         <label for="datumDo">Datum do:</label>
         <input type="date" id="datumDo" required />
         <button type="submit">Prikaži izveštaj za period</button>
+        <!-- Novo dugme Nazad -->
+        <button type="button" id="btnNazad">⬅ Nazad</button>
     </form>
 
     <script type="module">
@@ -171,7 +189,6 @@
                     reportContent.appendChild(entryDiv);
                 });
 
-                // Dodavanje event listenera za brisanje
                 document.querySelectorAll(".btnDelete").forEach(button => {
                     button.addEventListener("click", async () => {
                         if(confirm("Da li ste sigurni da želite da obrišete ovaj unos?")) {
@@ -246,7 +263,6 @@
                 `;
                 reportContent.appendChild(summaryDiv);
 
-                // Dodavanje event listenera za brisanje
                 document.querySelectorAll(".btnDelete").forEach(button => {
                     button.addEventListener("click", async () => {
                         if(confirm("Da li ste sigurni da želite da obrišete ovaj unos?")) {
@@ -308,5 +324,6 @@
     </script>
 </body>
 </html>
+
 
 
