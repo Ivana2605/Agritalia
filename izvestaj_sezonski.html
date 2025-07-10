@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Izveštaj sezonskih radova - Agritalia</title>
+    <link rel="icon" href="icon-192.png" />
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet" />
+    <meta name="theme-color" content="#2e7d32" />
+    <style>
+        body {
+            font-family: 'Rubik', sans-serif;
+            max-width: 480px;
+            margin: 0 auto;
+            background: #f7f7f7;
+            color: #2e7d32;
+            padding: 10px;
+        }
+        .logo {
+            max-width: 150px;
+            display: block;
+            margin: 20px auto;
+        }
+        h2, h3 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .entry {
+            background: white;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px 0;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .entry div {
+            margin: 5px 0;
+        }
+        button {
+            background: #2e7d32;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            width: 100%;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #27682c;
+        }
+        .btnDelete {
+            background: #d32f2f;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: auto;
+            padding: 5px 10px;
+            font-size: 14px;
+            border-radius: 6px;
+        }
+        .btnDelete:hover {
+            background: #b71c1c;
+        }
+        form#periodForm {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+            margin-top: 30px;
+        }
+        form#periodForm label {
+            display: block;
+            margin: 10px 0 6px;
+            font-weight: 500;
+        }
+        form#periodForm input[type="date"] {
+            width: 100%;
+            padding: 8px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+    <img src="logo.png" class="logo" alt="Agritalia Logo" />
+    <h2>Izveštaj sezonskih radova</h2>
+
+    <div id="reportDate" style="text-align:center; font-weight:600; margin-bottom:10px;"></div>
+    <div id="reportContent"></div>
+
+    <button id="btnNazad">⬅ Nazad</button>
+
+    <form id="periodForm">
+        <h3>Prikaži izveštaj za period</h3>
+        <label for="datumOd">Datum od:</label>
+        <input type="date" id="datumOd" required />
+        <label for="datumDo">Datum do:</label>
+        <input type="date" id="datumDo" required />
+        <button type="submit">Prikaži izveštaj za period</button>
+    </form>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, collection, query, where, getDocs, deleteDoc, doc, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBGeFazvjgtDUbB-VSJlEcXDe4bW-r0sJs",
+            authDomain: "agritalia-app.firebaseapp.com",
+            projectId: "agritalia-app",
+            storageBucket: "agritalia-app.appspot.com",
+            messagingSenderId: "935329247921",
+            appId: "1:935329247921:web:d9de1aa832e2432170a890"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        const reportContent = document.getElementById("reportContent");
+        const reportDateDiv = document.getElementById("reportDate");
+        const periodForm = document.getElementById("periodForm");
+
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        function formatDateSR(dateStr) {
+            if (!dateStr) return "";
+            const [year, month, day] = dateStr.split("-");
+            return `${day}.${month}.${year}`;
+        }
+
+        async function loadReportByDate(user, date) {
+            reportDateDiv.textContent = `Izveštaj za datum: ${formatDateSR(date)}`;
+            try {
+                const radoviRef = collection(db, "sezonskiRadovi");
+                const q = query(radoviRef, where("userId", "==", user.uid), where("datum", "==", date));
+                const snapshot = await getDocs(q);
+
+                if (snapshot.empty) {
+                    reportContent.innerHTML = `<div class="entry">Nema podataka za datum ${formatDateSR(date)}.</div>`;
+                    return;
+                }
+
+                reportContent.innerHTML = "";
+
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const sati = Number(data.sati) || 0;
+                    const radnici = Number(data.radnici) || 0;
+                    const trosak = Number(data.trosak) || 0;
+
+                    const entryDiv = document.createElement("div");
+                    entryDiv.classList.add("entry");
+                    entryDiv.innerHTML = `
+                        <div><strong>Vrsta rada:</strong> ${data.vrstaRada || '-'}</div>
+                        <div><strong>Kultura:</strong> ${data.kultura || '-'}</div>
+                        <div><strong>Sati rada:</strong> ${sati.toFixed(2)}</div>
+                        <div><strong>Broj radnika:</strong> ${radnici}</div>
+                        <div><strong>Trošak:</strong> ${trosak.toFixed(2)} RSD</div>
+                        <button class="btnDelete" data-id="${docSnap.id}">Obriši</button>
+                    `;
+                    reportContent.appendChild(entryDiv);
+                });
+
+                // Dodavanje event listenera za brisanje
+                document.querySelectorAll(".btnDelete").forEach(button => {
+                    button.addEventListener("click", async () => {
+                        if(confirm("Da li ste sigurni da želite da obrišete ovaj unos?")) {
+                            const docId = button.getAttribute("data-id");
+                            await deleteDoc(doc(db, "sezonskiRadovi", docId));
+                            alert("Unos je obrisan.");
+                            loadReportByDate(user, date);
+                        }
+                    });
+                });
+
+            } catch (error) {
+                reportContent.innerHTML = `<div class="entry" style="color:red;">Greška pri učitavanju: ${error.message}</div>`;
+            }
+        }
+
+        async function loadReportByPeriod(user, od, doDatum) {
+            reportDateDiv.textContent = `Izveštaj za period: ${formatDateSR(od)} - ${formatDateSR(doDatum)}`;
+            try {
+                const radoviRef = collection(db, "sezonskiRadovi");
+                const q = query(
+                    radoviRef,
+                    where("userId", "==", user.uid),
+                    where("datum", ">=", od),
+                    where("datum", "<=", doDatum),
+                    orderBy("datum")
+                );
+                const snapshot = await getDocs(q);
+
+                if (snapshot.empty) {
+                    reportContent.innerHTML = `<div class="entry">Nema podataka za izabrani period.</div>`;
+                    return;
+                }
+
+                let ukupnoSati = 0;
+                let ukupnoRadnika = 0;
+                let ukupnoTrosak = 0;
+
+                reportContent.innerHTML = "";
+
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const sati = Number(data.sati) || 0;
+                    const radnici = Number(data.radnici) || 0;
+                    const trosak = Number(data.trosak) || 0;
+
+                    ukupnoSati += sati;
+                    ukupnoRadnika += radnici;
+                    ukupnoTrosak += trosak;
+
+                    const entryDiv = document.createElement("div");
+                    entryDiv.classList.add("entry");
+                    entryDiv.innerHTML = `
+                        <div><strong>Datum:</strong> ${formatDateSR(data.datum)}</div>
+                        <div><strong>Vrsta rada:</strong> ${data.vrstaRada || '-'}</div>
+                        <div><strong>Kultura:</strong> ${data.kultura || '-'}</div>
+                        <div><strong>Sati rada:</strong> ${sati.toFixed(2)}</div>
+                        <div><strong>Broj radnika:</strong> ${radnici}</div>
+                        <div><strong>Trošak:</strong> ${trosak.toFixed(2)} RSD</div>
+                        <button class="btnDelete" data-id="${docSnap.id}">Obriši</button>
+                    `;
+                    reportContent.appendChild(entryDiv);
+                });
+
+                const summaryDiv = document.createElement("div");
+                summaryDiv.classList.add("entry");
+                summaryDiv.innerHTML = `
+                    <h3>Ukupni podaci za period</h3>
+                    <div><strong>Ukupno sati rada:</strong> ${ukupnoSati.toFixed(2)}</div>
+                    <div><strong>Ukupno radnika:</strong> ${ukupnoRadnika}</div>
+                    <div><strong>Ukupan trošak:</strong> ${ukupnoTrosak.toFixed(2)} RSD</div>
+                `;
+                reportContent.appendChild(summaryDiv);
+
+                // Dodavanje event listenera za brisanje
+                document.querySelectorAll(".btnDelete").forEach(button => {
+                    button.addEventListener("click", async () => {
+                        if(confirm("Da li ste sigurni da želite da obrišete ovaj unos?")) {
+                            const docId = button.getAttribute("data-id");
+                            await deleteDoc(doc(db, "sezonskiRadovi", docId));
+                            alert("Unos je obrisan.");
+                            loadReportByPeriod(user, od, doDatum);
+                        }
+                    });
+                });
+
+            } catch (error) {
+                reportContent.innerHTML = `<div class="entry" style="color:red;">Greška pri učitavanju: ${error.message}</div>`;
+            }
+        }
+
+        onAuthStateChanged(auth, user => {
+            if (!user) {
+                alert("Niste prijavljeni. Bićete preusmereni.");
+                window.location.href = "index.html";
+                return;
+            }
+            // Početno učitavanje za jedan datum iz URL parametra
+            const datum = getQueryParam("datum");
+            if (datum) {
+                loadReportByDate(user, datum);
+            } else {
+                reportContent.innerHTML = `<div class="entry">Izaberite datum ili period za izveštaj.</div>`;
+                reportDateDiv.textContent = "";
+            }
+        });
+
+        document.getElementById("btnNazad").addEventListener("click", () => {
+            window.location.href = "dashboard.html";
+        });
+
+        periodForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const user = auth.currentUser;
+            if (!user) {
+                alert("Morate biti prijavljeni.");
+                window.location.href = "index.html";
+                return;
+            }
+
+            const od = document.getElementById("datumOd").value;
+            const doDatum = document.getElementById("datumDo").value;
+
+            if (!od || !doDatum) {
+                alert("Unesite oba datuma.");
+                return;
+            }
+            if (od > doDatum) {
+                alert("Datum od mora biti manji ili jednak datumu do.");
+                return;
+            }
+            loadReportByPeriod(user, od, doDatum);
+        });
+    </script>
+</body>
+</html>
+
+

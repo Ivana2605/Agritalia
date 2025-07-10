@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agritalia - Dashboard</title>
+<link rel="icon" href="icon-192.png" />
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+    body {
+        font-family: 'Rubik', sans-serif;
+        max-width: 480px;
+        margin: 0 auto;
+        padding: 10px;
+        background-color: #f7f7f7;
+        color: #2e7d32;
+        text-align: center;
+    }
+    .logo {
+        max-width: 150px;
+        margin: 20px auto;
+        display: block;
+    }
+    #status {
+        margin-bottom: 20px;
+        font-weight: 600;
+    }
+    button {
+        width: 100%;
+        padding: 15px;
+        margin: 15px 0;
+        font-size: 18px;
+        border-radius: 10px;
+        border: none;
+        background-color: #2e7d32;
+        color: white;
+        cursor: pointer;
+        font-weight: 700;
+    }
+    button:hover {
+        background-color: #27682c;
+    }
+    #logoutBtn {
+        background-color: #d32f2f;
+        margin-top: 40px;
+    }
+    #logoutBtn:hover {
+        background-color: #b71c1c;
+    }
+    /* Modal stil */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 10;
+        left: 0; top: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5);
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-content {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        width: 90%;
+        max-width: 300px;
+        text-align: center;
+    }
+    .close-btn {
+        background: #d32f2f;
+        margin-top: 15px;
+    }
+</style>
+</head>
+<body>
+<img src="logo.png" alt="Agritalia Logo" class="logo" />
+<div id="status">Provera prijave...</div>
+
+<button id="berbaBtn">Unos berbe</button>
+<button id="sezonskiBtn">Sezonski radovi</button>
+<button id="izvestajBtn">Prikaži izveštaj</button>
+<button id="logoutBtn">Odjavi se</button>
+
+<!-- Modal za izbor tipa izveštaja -->
+<div id="izvestajModal" class="modal">
+    <div class="modal-content">
+        <h3>Izaberite tip izveštaja</h3>
+        <button id="izvestajBerbaBtn">Izveštaj berbe</button>
+        <button id="izvestajSezonskiBtn">Izveštaj sezonskih radova</button>
+        <button class="close-btn" id="closeModalBtn">Otkaži</button>
+    </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBGeFazvjgtDUbB-VSJlEcXDe4bW-r0sJs",
+    authDomain: "agritalia-app.firebaseapp.com",
+    projectId: "agritalia-app",
+    storageBucket: "agritalia-app.appspot.com",
+    messagingSenderId: "935329247921",
+    appId: "1:935329247921:web:d9de1aa832e2432170a890"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+const statusDiv = document.getElementById("status");
+const logoutBtn = document.getElementById("logoutBtn");
+const berbaBtn = document.getElementById("berbaBtn");
+const sezonskiBtn = document.getElementById("sezonskiBtn");
+const izvestajBtn = document.getElementById("izvestajBtn");
+
+// Modal elementi
+const izvestajModal = document.getElementById("izvestajModal");
+const izvestajBerbaBtn = document.getElementById("izvestajBerbaBtn");
+const izvestajSezonskiBtn = document.getElementById("izvestajSezonskiBtn");
+const closeModalBtn = document.getElementById("closeModalBtn");
+
+onAuthStateChanged(auth, user => {
+    if (user) {
+        statusDiv.textContent = `Prijavljeni ste kao: ${user.displayName || user.email}`;
+    } else {
+        window.location.href = "index.html";
+    }
+});
+
+logoutBtn.addEventListener("click", async () => {
+    await signOut(auth);
+    alert("Uspešno ste se odjavili.");
+    window.location.href = "index.html";
+});
+
+berbaBtn.addEventListener("click", () => {
+    window.location.href = "berba.html";
+});
+
+sezonskiBtn.addEventListener("click", () => {
+    window.location.href = "sezonski.html";
+});
+
+// Dugme za otvaranje modala
+izvestajBtn.addEventListener("click", () => {
+    izvestajModal.style.display = "flex";
+});
+
+// Dugme za zatvaranje modala
+closeModalBtn.addEventListener("click", () => {
+    izvestajModal.style.display = "none";
+});
+
+// Dugme za izveštaj berbe
+izvestajBerbaBtn.addEventListener("click", () => {
+    window.location.href = "izvestaj_berbe.html";
+});
+
+// Dugme za izveštaj sezonskih radova
+izvestajSezonskiBtn.addEventListener("click", () => {
+    window.location.href = "izvestaj_sezonski.html";
+});
+
+// Zatvori modal klikom van sadržaja
+window.addEventListener("click", (e) => {
+    if (e.target === izvestajModal) {
+        izvestajModal.style.display = "none";
+    }
+});
+</script>
+</body>
+</html>
+
