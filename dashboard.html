@@ -15,6 +15,9 @@
         background-color: #f7f7f7;
         color: #2e7d32;
         text-align: center;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
     }
     .logo {
         max-width: 150px;
@@ -42,7 +45,7 @@
     }
     #logoutBtn {
         background-color: #d32f2f;
-        margin-top: 40px;
+        margin-top: auto; /* Pomera dugme na dno */
     }
     #logoutBtn:hover {
         background-color: #b71c1c;
@@ -77,8 +80,9 @@
 <div id="status">Provera prijave...</div>
 
 <button id="berbaBtn">Unos berbe</button>
-<button id="sezonskiBtn">Sezonski radovi</button>
-<button id="izvestajBtn">Prikaži izveštaj</button>
+<button id="sezonskiBtn">Sezonski radovi (van berbe)</button>
+<button id="izvestajBtn">Izveštaji</button>
+
 <button id="logoutBtn">Odjavi se</button>
 
 <!-- Modal za izbor tipa izveštaja -->
@@ -170,4 +174,5 @@ window.addEventListener("click", (e) => {
 </script>
 </body>
 </html>
+
 
