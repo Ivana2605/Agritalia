@@ -59,13 +59,6 @@
         button:hover {
             background-color: #27682c;
         }
-        #logoutBtn {
-            background-color: #d32f2f;
-            margin-top: 20px;
-        }
-        #logoutBtn:hover {
-            background-color: #b71c1c;
-        }
         #status {
             text-align: center;
             font-weight: 600;
@@ -82,7 +75,6 @@
             gap: 5px;
             font-weight: 400;
         }
-        /* Dugme Nazad sa stilom */
         #btnNazad {
             background-color: #ccc;
             color: #2e7d32;
@@ -134,16 +126,15 @@
         <label for="trosak">Trošak po satu (RSD):</label>
         <input type="text" id="trosak" placeholder="Unesite trošak po satu" pattern="[0-9]*[.,]?[0-9]*" inputmode="decimal" required />
 
-        <button type="submit">Sačuvaj i prikaži izveštaj</button>
+        <button type="submit">Sačuvaj</button>
     </form>
 
-    <button id="logoutBtn" style="display:none;">Odjavi se</button>
     <button id="btnNazad">Nazad</button>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBGeFazvjgtDUbB-VSJlEcXDe4bW-r0sJs",
@@ -160,7 +151,6 @@
 
         const statusDiv = document.getElementById("status");
         const sezonskiForm = document.getElementById("sezonskiForm");
-        const logoutBtn = document.getElementById("logoutBtn");
         const btnNazad = document.getElementById("btnNazad");
 
         const kulturaSelect = document.getElementById("kulturaSelect");
@@ -192,23 +182,14 @@
             if (user) {
                 statusDiv.textContent = `Prijavljeni ste kao: ${user.displayName || user.email}`;
                 sezonskiForm.style.display = "block";
-                logoutBtn.style.display = "block";
             } else {
                 statusDiv.textContent = "Niste prijavljeni. Molimo prijavite se.";
                 sezonskiForm.style.display = "none";
-                logoutBtn.style.display = "none";
             }
-        });
-
-        logoutBtn.addEventListener("click", async () => {
-            await signOut(auth);
-            alert("Uspešno ste se odjavili.");
-            window.location.href = "index.html";
         });
 
         sezonskiForm.addEventListener("submit", async (e) => {
             e.preventDefault();
-
             const user = auth.currentUser;
             if (!user) {
                 alert("Morate biti prijavljeni da biste uneli podatke.");
@@ -222,11 +203,9 @@
             const checkboxes = document.querySelectorAll("#vrstaRadaGroup input[type='checkbox']:checked");
             const vrstaRada = [];
             checkboxes.forEach(cb => {
-                if (cb.value === "Drugo") {
-                    if (vrstaRadaDrugo.value.trim() !== "") {
-                        vrstaRada.push(vrstaRadaDrugo.value.trim());
-                    }
-                } else {
+                if (cb.value === "Drugo" && vrstaRadaDrugo.value.trim() !== "") {
+                    vrstaRada.push(vrstaRadaDrugo.value.trim());
+                } else if (cb.value !== "Drugo") {
                     vrstaRada.push(cb.value);
                 }
             });
@@ -241,7 +220,7 @@
             }
 
             try {
-                await addDoc(collection(db, "sezonskiRadovi"), {
+                await addDoc(collection(db, "sezonskiRadovi"), { // kolekcija promenjena na 'sezonskiRadovi'
                     userId: user.uid,
                     imePrezime: user.displayName || "",
                     datum,
@@ -256,7 +235,6 @@
                 sezonskiForm.reset();
                 kulturaDrugo.style.display = "none";
                 vrstaRadaDrugo.style.display = "none";
-                window.location.href = `izvestaj_sezonski.html?datum=${datum}`;
             } catch (error) {
                 alert("Greška pri čuvanju podataka: " + error.message);
             }
@@ -269,3 +247,4 @@
 
 </body>
 </html>
+

@@ -14,15 +14,14 @@
         padding: 10px;
         background-color: #f7f7f7;
         color: #2e7d32;
-        text-align: center;
         display: flex;
         flex-direction: column;
         min-height: 100vh;
+        text-align: center;
     }
     .logo {
         max-width: 150px;
         margin: 20px auto;
-        display: block;
     }
     #status {
         margin-bottom: 20px;
@@ -31,7 +30,6 @@
     button {
         width: 100%;
         padding: 15px;
-        margin: 15px 0;
         font-size: 18px;
         border-radius: 10px;
         border: none;
@@ -39,13 +37,19 @@
         color: white;
         cursor: pointer;
         font-weight: 700;
+        margin-bottom: 15px;
     }
     button:hover {
         background-color: #27682c;
     }
+    #izvestajBtn {
+        margin-top: 30px; /* Pomeramo „Izveštaji“ niže */
+        margin-bottom: 30px;
+    }
     #logoutBtn {
         background-color: #d32f2f;
-        margin-top: auto; /* Pomera dugme na dno */
+        margin-top: auto; /* spacer gore pomera dugme malo iznad dna */
+        margin-bottom: 20px;
     }
     #logoutBtn:hover {
         background-color: #b71c1c;
@@ -145,27 +149,22 @@ sezonskiBtn.addEventListener("click", () => {
     window.location.href = "sezonski.html";
 });
 
-// Dugme za otvaranje modala
 izvestajBtn.addEventListener("click", () => {
     izvestajModal.style.display = "flex";
 });
 
-// Dugme za zatvaranje modala
 closeModalBtn.addEventListener("click", () => {
     izvestajModal.style.display = "none";
 });
 
-// Dugme za izveštaj berbe
 izvestajBerbaBtn.addEventListener("click", () => {
     window.location.href = "izvestaj_berbe.html";
 });
 
-// Dugme za izveštaj sezonskih radova
 izvestajSezonskiBtn.addEventListener("click", () => {
     window.location.href = "izvestaj_sezonski.html";
 });
 
-// Zatvori modal klikom van sadržaja
 window.addEventListener("click", (e) => {
     if (e.target === izvestajModal) {
         izvestajModal.style.display = "none";
@@ -174,5 +173,8 @@ window.addEventListener("click", (e) => {
 </script>
 </body>
 </html>
+
+
+
 
 

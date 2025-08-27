@@ -1,358 +1,265 @@
 <!DOCTYPE html>
 <html lang="sr">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Izveštaj berbe - Agritalia</title>
-    <link rel="icon" href="icon-192.png" />
-    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet" />
-    <meta name="theme-color" content="#2e7d32" />
-    <style>
-        body {
-            font-family: 'Rubik', sans-serif;
-            max-width: 480px;
-            margin: 0 auto;
-            background: #f7f7f7;
-            color: #2e7d32;
-            padding: 10px;
-        }
-        .logo {
-            max-width: 150px;
-            display: block;
-            margin: 20px auto;
-        }
-        h2, h3 {
-            text-align: center;
-            margin-bottom: 10px;
-        }
-        .entry {
-            background: white;
-            border-radius: 8px;
-            padding: 10px;
-            margin: 10px 0;
-            box-shadow: 0 0 5px rgba(0,0,0,0.1);
-            position: relative;
-        }
-        .entry div {
-            margin: 5px 0;
-        }
-        button {
-            background: #2e7d32;
-            color: white;
-            padding: 10px;
-            border: none;
-            border-radius: 8px;
-            width: 100%;
-            font-weight: bold;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        button:hover {
-            background: #27682c;
-        }
-        .btnDelete {
-            background: #d32f2f;
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            width: auto;
-            padding: 5px 10px;
-            font-size: 14px;
-            border-radius: 6px;
-        }
-        .btnDelete:hover {
-            background: #b71c1c;
-        }
-        form#periodForm {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 0 5px rgba(0,0,0,0.1);
-            margin-top: 30px;
-        }
-        form#periodForm label {
-            display: block;
-            margin: 10px 0 6px;
-            font-weight: 500;
-        }
-        form#periodForm input[type="date"] {
-            width: 100%;
-            padding: 8px;
-            font-size: 16px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            box-sizing: border-box;
-        }
-        /* Novo dugme Nazad unutar forme */
-        #btnNazadForm {
-            background-color: #f0f0f0;
-            color: #2e7d32;
-            border: 2px solid #2e7d32;
-            font-weight: 700;
-            border-radius: 8px;
-            margin-top: 10px;
-            width: 100%;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-        #btnNazadForm:hover {
-            background-color: #d7e5d7;
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Izveštaj berbe - Agritalia</title>
+<link rel="icon" href="icon-192.png" />
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet" />
+<meta name="theme-color" content="#2e7d32" />
+<style>
+body {
+    font-family: 'Rubik', sans-serif;
+    max-width: 480px;
+    margin: 0 auto;
+    background: #f7f7f7;
+    color: #2e7d32;
+    padding: 10px;
+}
+.logo {
+    max-width: 150px;
+    display: block;
+    margin: 20px auto;
+}
+h2, h3 {
+    text-align: center;
+    margin-bottom: 10px;
+}
+.entry {
+    background: white;
+    border-radius: 8px;
+    padding: 10px;
+    margin: 10px 0;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    font-family: monospace;
+    font-variant-numeric: tabular-nums;
+    position: relative;
+}
+.entry div {
+    display: flex;
+    justify-content: space-between;
+    margin: 4px 0;
+}
+.entry div span.label {
+    flex: 1;
+}
+.entry div span.value {
+    width: 160px;
+    text-align: right;
+}
+.entry button.deleteBtn {
+    background: #d32f2f;
+    color: white;
+    padding: 4px 12px; /* manja širina dugmeta */
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 12px;
+    cursor: pointer;
+    margin: 6px auto 0 auto; /* centrirano ispod izveštaja */
+    display: block;
+    width: fit-content; /* širina dugmeta po sadržaju */
+}
+.entry button.deleteBtn:hover { background: #b71c1c; }
+
+button {
+    background: #2e7d32;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    width: 100%;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+button:hover { background: #27682c; }
+
+form#periodForm {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    margin-top: 30px;
+}
+form#periodForm label {
+    display: block;
+    margin: 10px 0 6px;
+    font-weight: 500;
+}
+form#periodForm input[type="date"] {
+    width: 100%;
+    padding: 8px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+/* Dugme Nazad samo na kraju */
+#btnNazad {
+    background: #2e7d32;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    width: 100%;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 20px;
+}
+#btnNazad:hover { background: #27682c; }
+</style>
 </head>
 <body>
 
-    <img src="logo.png" class="logo" alt="Agritalia Logo" />
-    <h2>Izveštaj berbe</h2>
+<img src="logo.png" class="logo" alt="Agritalia Logo" />
+<h2>Izveštaj berbe</h2>
 
-    <div id="reportDate" style="text-align:center; font-weight:600; margin-bottom:10px;"></div>
-    <div id="reportContent"></div>
+<div id="reportDate" style="text-align:center; font-weight:600; margin-bottom:10px;"></div>
+<div id="reportContent"></div>
 
-    <button id="btnNazad">⬅ Nazad</button>
+<form id="periodForm">
+    <h3>Prikaži izveštaj za period</h3>
+    <label for="datumOd">Datum od:</label>
+    <input type="date" id="datumOd" required />
+    <label for="datumDo">Datum do:</label>
+    <input type="date" id="datumDo" required />
+    <button type="submit">Prikaži izveštaj za period</button>
+</form>
 
-    <form id="periodForm">
-        <h3>Prikaži izveštaj za period</h3>
-        <label for="datumOd">Datum od:</label>
-        <input type="date" id="datumOd" required />
-        <label for="datumDo">Datum do:</label>
-        <input type="date" id="datumDo" required />
-        <button type="submit">Prikaži izveštaj za period</button>
-        <!-- Novo dugme nazad ispod dugmeta Prikaži izveštaj -->
-        <button type="button" id="btnNazadForm">⬅ Nazad</button>
-    </form>
+<!-- Jedino dugme Nazad na dnu -->
+<button id="btnNazad">⬅ Nazad</button>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, collection, query, where, getDocs, deleteDoc, doc, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, query, where, getDocs, deleteDoc, doc, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBGeFazvjgtDUbB-VSJlEcXDe4bW-r0sJs",
-            authDomain: "agritalia-app.firebaseapp.com",
-            projectId: "agritalia-app",
-            storageBucket: "agritalia-app.appspot.com",
-            messagingSenderId: "935329247921",
-            appId: "1:935329247921:web:d9de1aa832e2432170a890"
-        };
+const firebaseConfig = {
+    apiKey: "AIzaSyBGeFazvjgtDUbB-VSJlEcXDe4bW-r0sJs",
+    authDomain: "agritalia-app.firebaseapp.com",
+    projectId: "agritalia-app",
+    storageBucket: "agritalia-app.appspot.com",
+    messagingSenderId: "935329247921",
+    appId: "1:935329247921:web:d9de1aa832e2432170a890"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+const reportContent = document.getElementById("reportContent");
+const reportDateDiv = document.getElementById("reportDate");
+const periodForm = document.getElementById("periodForm");
 
-        const reportContent = document.getElementById("reportContent");
-        const reportDateDiv = document.getElementById("reportDate");
-        const periodForm = document.getElementById("periodForm");
+let lastSnapshot = [];
 
-        function getQueryParam(param) {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get(param);
+function getQueryParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+}
+
+function formatDateSR(dateStr) {
+    if (!dateStr) return "";
+    const [year, month, day] = dateStr.split("-");
+    return `${day}.${month}.${year}`;
+}
+
+function formatNumber(num) {
+    return Number(num).toLocaleString('sr-RS', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function renderEntry(data) {
+    const kolicina = formatNumber(data.kolicina);
+    const cena = formatNumber(data.cena);
+    const prihod = formatNumber(data.kolicina * data.cena);
+    const sati = formatNumber(data.sati);
+    const trosakSat = formatNumber(data.trosakSat);
+    const trosak = formatNumber(data.sati * data.trosakSat);
+    const neto = formatNumber((data.kolicina * data.cena) - (data.sati * data.trosakSat));
+
+    const entryDiv = document.createElement("div");
+    entryDiv.classList.add("entry");
+    entryDiv.innerHTML = `
+        <div><span class="label">Datum:</span> <span class="value">${formatDateSR(data.datum)}</span></div>
+        <div><span class="label">Količina:</span> <span class="value">${kolicina} kg</span></div>
+        <div><span class="label">Cena:</span> <span class="value">${cena} RSD/kg</span></div>
+        <div><span class="label">Prihod:</span> <span class="value">${prihod} RSD</span></div>
+        <div><span class="label">Sati rada:</span> <span class="value">${sati}</span></div>
+        <div><span class="label">Trošak po satu:</span> <span class="value">${trosakSat} RSD</span></div>
+        <div><span class="label">Trošak:</span> <span class="value">${trosak} RSD</span></div>
+        <div><span class="label">Neto zarada:</span> <span class="value">${neto} RSD</span></div>
+        <button class="deleteBtn">Obriši</button>
+    `;
+
+    entryDiv.querySelector(".deleteBtn").addEventListener("click", async () => {
+        if (confirm("Da li ste sigurni da želite da obrišete ovaj izveštaj?")) {
+            await deleteDoc(doc(db, "berba", data.id));
+            entryDiv.remove();
         }
+    });
 
-        function formatDateSR(dateStr) {
-            if (!dateStr) return "";
-            const [year, month, day] = dateStr.split("-");
-            return `${day}.${month}.${year}`;
-        }
+    reportContent.appendChild(entryDiv);
+}
 
-        async function loadReportByDate(user, date) {
-            reportDateDiv.textContent = `Izveštaj za datum: ${formatDateSR(date)}`;
-            try {
-                const berbaRef = collection(db, "berba");
-                const q = query(berbaRef, where("userId", "==", user.uid), where("datum", "==", date));
-                const snapshot = await getDocs(q);
+async function loadReportByDate(user, date) {
+    reportDateDiv.textContent = `Izveštaj za datum: ${formatDateSR(date)}`;
+    const berbaRef = collection(db, "berba");
+    const q = query(berbaRef, where("userId","==",user.uid), where("datum","==",date));
+    const snapshot = await getDocs(q);
+    reportContent.innerHTML = "";
+    lastSnapshot = snapshot.docs;
+    snapshot.docs.forEach(docSnap => {
+        const data = docSnap.data();
+        data.id = docSnap.id;
+        renderEntry(data);
+    });
+}
 
-                if (snapshot.empty) {
-                    reportContent.innerHTML = `<div class="entry">Nema podataka za datum ${formatDateSR(date)}.</div>`;
-                    return;
-                }
+async function loadReportByPeriod(user, od, doDatum) {
+    reportDateDiv.textContent = `Izveštaj za period: ${formatDateSR(od)} - ${formatDateSR(doDatum)}`;
+    const berbaRef = collection(db, "berba");
+    const q = query(
+        berbaRef,
+        where("userId","==",user.uid),
+        where("datum", ">=", od),
+        where("datum", "<=", doDatum),
+        orderBy("datum")
+    );
+    const snapshot = await getDocs(q);
+    reportContent.innerHTML = "";
+    lastSnapshot = snapshot.docs;
+    snapshot.docs.forEach(docSnap => {
+        const data = docSnap.data();
+        data.id = docSnap.id;
+        renderEntry(data);
+    });
+}
 
-                let ukupnaKolicina = 0;
-                let ukupnoPrihod = 0;
-                let ukupnoTrosak = 0;
-                let ukupnoSati = 0;
+onAuthStateChanged(auth, user => {
+    if (!user) { window.location.href="index.html"; return; }
+    const datum = getQueryParam("datum");
+    if (datum) loadReportByDate(user, datum);
+    else reportContent.innerHTML = "<div>Izaberite datum ili period za izveštaj.</div>";
+});
 
-                reportContent.innerHTML = "";
+document.getElementById("btnNazad").addEventListener("click",()=>{ window.location.href="dashboard.html"; });
 
-                snapshot.forEach(docSnap => {
-                    const data = docSnap.data();
-                    const kolicina = Number(data.kolicina) || 0;
-                    const cena = Number(data.cena) || 0;
-                    const prihod = kolicina * cena;
-                    const sati = Number(data.sati) || 0;
-                    const trosakSat = Number(data.trosakSat) || 0;
-                    const trosak = sati * trosakSat;
-                    const neto = prihod - trosak;
-
-                    ukupnaKolicina += kolicina;
-                    ukupnoPrihod += prihod;
-                    ukupnoTrosak += trosak;
-                    ukupnoSati += sati;
-
-                    const entryDiv = document.createElement("div");
-                    entryDiv.classList.add("entry");
-                    entryDiv.innerHTML = `
-                        <div><strong>Količina:</strong> ${kolicina.toFixed(2)} kg</div>
-                        <div><strong>Cena:</strong> ${cena.toFixed(2)} RSD/kg</div>
-                        <div><strong>Prihod:</strong> ${prihod.toFixed(2)} RSD</div>
-                        <div><strong>Sati rada:</strong> ${sati.toFixed(2)}</div>
-                        <div><strong>Trošak:</strong> ${trosak.toFixed(2)} RSD</div>
-                        <div><strong>Neto zarada:</strong> ${neto.toFixed(2)} RSD</div>
-                        <button class="btnDelete" data-id="${docSnap.id}">Obriši</button>
-                    `;
-                    reportContent.appendChild(entryDiv);
-                });
-
-                const summaryDiv = document.createElement("div");
-                summaryDiv.classList.add("entry");
-                summaryDiv.innerHTML = `
-                    <h3>Ukupno za dan</h3>
-                    <div>Ukupna količina: ${ukupnaKolicina.toFixed(2)} kg</div>
-                    <div>Ukupno sati rada: ${ukupnoSati.toFixed(2)}</div>
-                    <div>Ukupan prihod: ${ukupnoPrihod.toFixed(2)} RSD</div>
-                    <div>Ukupan trošak: ${ukupnoTrosak.toFixed(2)} RSD</div>
-                    <div>Neto zarada: ${(ukupnoPrihod - ukupnoTrosak).toFixed(2)} RSD</div>
-                `;
-                reportContent.appendChild(summaryDiv);
-
-                document.querySelectorAll(".btnDelete").forEach(button => {
-                    button.addEventListener("click", async () => {
-                        if(confirm("Da li želite da obrišete ovaj unos?")) {
-                            await deleteDoc(doc(db, "berba", button.getAttribute("data-id")));
-                            alert("Unos obrisan.");
-                            loadReportByDate(user, date);
-                        }
-                    });
-                });
-            } catch (error) {
-                reportContent.innerHTML = `<div class="entry" style="color:red;">Greška: ${error.message}</div>`;
-            }
-        }
-
-        async function loadReportByPeriod(user, od, doDatum) {
-            reportDateDiv.textContent = `Izveštaj za period: ${formatDateSR(od)} - ${formatDateSR(doDatum)}`;
-            try {
-                const berbaRef = collection(db, "berba");
-                const q = query(
-                    berbaRef,
-                    where("userId", "==", user.uid),
-                    where("datum", ">=", od),
-                    where("datum", "<=", doDatum),
-                    orderBy("datum")
-                );
-                const snapshot = await getDocs(q);
-
-                if (snapshot.empty) {
-                    reportContent.innerHTML = `<div class="entry">Nema podataka za izabrani period.</div>`;
-                    return;
-                }
-
-                let ukupnaKolicina = 0;
-                let ukupnoPrihod = 0;
-                let ukupnoTrosak = 0;
-                let ukupnoSati = 0;
-
-                reportContent.innerHTML = "";
-
-                snapshot.forEach(docSnap => {
-                    const data = docSnap.data();
-                    const datum = formatDateSR(data.datum);
-                    const kolicina = Number(data.kolicina) || 0;
-                    const cena = Number(data.cena) || 0;
-                    const prihod = kolicina * cena;
-                    const sati = Number(data.sati) || 0;
-                    const trosakSat = Number(data.trosakSat) || 0;
-                    const trosak = sati * trosakSat;
-                    const neto = prihod - trosak;
-
-                    ukupnaKolicina += kolicina;
-                    ukupnoPrihod += prihod;
-                    ukupnoTrosak += trosak;
-                    ukupnoSati += sati;
-
-                    const entryDiv = document.createElement("div");
-                    entryDiv.classList.add("entry");
-                    entryDiv.innerHTML = `
-                        <div><strong>Datum:</strong> ${datum}</div>
-                        <div><strong>Količina:</strong> ${kolicina.toFixed(2)} kg</div>
-                        <div><strong>Cena:</strong> ${cena.toFixed(2)} RSD/kg</div>
-                        <div><strong>Prihod:</strong> ${prihod.toFixed(2)} RSD</div>
-                        <div><strong>Sati rada:</strong> ${sati.toFixed(2)}</div>
-                        <div><strong>Trošak:</strong> ${trosak.toFixed(2)} RSD</div>
-                        <div><strong>Neto zarada:</strong> ${neto.toFixed(2)} RSD</div>
-                        <button class="btnDelete" data-id="${docSnap.id}">Obriši</button>
-                    `;
-                    reportContent.appendChild(entryDiv);
-                });
-
-                const summaryDiv = document.createElement("div");
-                summaryDiv.classList.add("entry");
-                summaryDiv.innerHTML = `
-                    <h3>Ukupni podaci za period</h3>
-                    <div>Ukupna količina: ${ukupnaKolicina.toFixed(2)} kg</div>
-                    <div>Ukupno sati rada: ${ukupnoSati.toFixed(2)}</div>
-                    <div>Ukupan prihod: ${ukupnoPrihod.toFixed(2)} RSD</div>
-                    <div>Ukupan trošak: ${ukupnoTrosak.toFixed(2)} RSD</div>
-                    <div>Neto zarada: ${(ukupnoPrihod - ukupnoTrosak).toFixed(2)} RSD</div>
-                `;
-                reportContent.appendChild(summaryDiv);
-
-                document.querySelectorAll(".btnDelete").forEach(button => {
-                    button.addEventListener("click", async () => {
-                        if(confirm("Da li želite da obrišete ovaj unos?")) {
-                            await deleteDoc(doc(db, "berba", button.getAttribute("data-id")));
-                            alert("Unos obrisan.");
-                            loadReportByPeriod(user, od, doDatum);
-                        }
-                    });
-                });
-            } catch (error) {
-                reportContent.innerHTML = `<div class="entry" style="color:red;">Greška: ${error.message}</div>`;
-            }
-        }
-
-        onAuthStateChanged(auth, user => {
-            if (!user) {
-                alert("Niste prijavljeni. Bićete preusmereni.");
-                window.location.href = "index.html";
-                return;
-            }
-            const datum = getQueryParam("datum");
-            if (datum) {
-                loadReportByDate(user, datum);
-            } else {
-                reportContent.innerHTML = `<div class="entry">Izaberite datum ili period za izveštaj.</div>`;
-            }
-        });
-
-        document.getElementById("btnNazad").addEventListener("click", () => {
-            window.location.href = "dashboard.html";
-        });
-
-        document.getElementById("btnNazadForm").addEventListener("click", () => {
-            window.location.href = "dashboard.html";
-        });
-
-        periodForm.addEventListener("submit", (e) => {
-            e.preventDefault();
-            const user = auth.currentUser;
-            if (!user) {
-                alert("Morate biti prijavljeni.");
-                window.location.href = "index.html";
-                return;
-            }
-            const od = document.getElementById("datumOd").value;
-            const doDatum = document.getElementById("datumDo").value;
-            if (!od || !doDatum) {
-                alert("Unesite oba datuma.");
-                return;
-            }
-            if (od > doDatum) {
-                alert("Datum od mora biti pre datuma do.");
-                return;
-            }
-            loadReportByPeriod(user, od, doDatum);
-        });
-    </script>
+periodForm.addEventListener("submit", e => {
+    e.preventDefault();
+    const user = auth.currentUser;
+    if (!user) { window.location.href="index.html"; return; }
+    const od = document.getElementById("datumOd").value;
+    const doDatum = document.getElementById("datumDo").value;
+    if (!od || !doDatum) return;
+    if (od > doDatum) { alert("Datum od mora biti pre datuma do."); return; }
+    loadReportByPeriod(user, od, doDatum);
+});
+</script>
 </body>
 </html>
+
+
+

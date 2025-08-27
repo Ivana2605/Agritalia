@@ -62,7 +62,6 @@
     button:hover {
       background-color: #27682c;
     }
-    /* Dugme Nazad sa posebnim stilom */
     #btnNazad {
       background-color: #ccc;
       color: #2e7d32;
@@ -96,7 +95,7 @@
     <label for="trosakSat">Cena radnog sata (RSD) <span style="color:red;">*</span></label>
     <input type="text" id="trosakSat" pattern="[0-9]*[.,]?[0-9]*" inputmode="decimal" required />
 
-    <button type="submit">Sačuvaj i prikaži izveštaj</button>
+    <button type="submit">Sačuvaj</button>
   </form>
 
   <button id="btnNazad">Nazad</button>
@@ -147,8 +146,7 @@
           timestamp: new Date()
         });
         alert("Podaci uspešno sačuvani!");
-        form.reset();
-        window.location.href = `izvestaj_berbe.html?datum=${datum}`;
+        form.reset(); // Ostajemo na istoj stranici
       } catch (error) {
         alert("Greška pri čuvanju podataka: " + error.message);
       }
@@ -161,6 +159,7 @@
   </script>
 </body>
 </html>
+
 
 
 
