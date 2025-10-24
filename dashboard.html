@@ -43,12 +43,12 @@
         background-color: #27682c;
     }
     #izvestajBtn {
-        margin-top: 30px; /* Pomeramo „Izveštaji“ niže */
+        margin-top: 30px;
         margin-bottom: 30px;
     }
     #logoutBtn {
         background-color: #d32f2f;
-        margin-top: auto; /* spacer gore pomera dugme malo iznad dna */
+        margin-top: auto;
         margin-bottom: 20px;
     }
     #logoutBtn:hover {
@@ -83,8 +83,10 @@
 <img src="logo.png" alt="Agritalia Logo" class="logo" />
 <div id="status">Provera prijave...</div>
 
-<button id="berbaBtn">Unos berbe</button>
-<button id="sezonskiBtn">Sezonski radovi (van berbe)</button>
+<!-- Nova dugmad -->
+<button id="troskoviBtn">Troškovi</button>
+<button id="prihodiBtn">Prihodi</button>
+<button id="pregledBtn">Pregled</button>
 <button id="izvestajBtn">Izveštaji</button>
 
 <button id="logoutBtn">Odjavi se</button>
@@ -93,8 +95,8 @@
 <div id="izvestajModal" class="modal">
     <div class="modal-content">
         <h3>Izaberite tip izveštaja</h3>
-        <button id="izvestajBerbaBtn">Izveštaj berbe</button>
-        <button id="izvestajSezonskiBtn">Izveštaj sezonskih radova</button>
+        <button id="izvestajTroskoviBtn">Izveštaj troškova</button>
+        <button id="izvestajPrihodiBtn">Izveštaj prihoda</button>
         <button class="close-btn" id="closeModalBtn">Otkaži</button>
     </div>
 </div>
@@ -117,16 +119,20 @@ const auth = getAuth(app);
 
 const statusDiv = document.getElementById("status");
 const logoutBtn = document.getElementById("logoutBtn");
-const berbaBtn = document.getElementById("berbaBtn");
-const sezonskiBtn = document.getElementById("sezonskiBtn");
+
+// Nova dugmad
+const troskoviBtn = document.getElementById("troskoviBtn");
+const prihodiBtn = document.getElementById("prihodiBtn");
+const pregledBtn = document.getElementById("pregledBtn");
 const izvestajBtn = document.getElementById("izvestajBtn");
 
 // Modal elementi
 const izvestajModal = document.getElementById("izvestajModal");
-const izvestajBerbaBtn = document.getElementById("izvestajBerbaBtn");
-const izvestajSezonskiBtn = document.getElementById("izvestajSezonskiBtn");
+const izvestajTroskoviBtn = document.getElementById("izvestajTroskoviBtn");
+const izvestajPrihodiBtn = document.getElementById("izvestajPrihodiBtn");
 const closeModalBtn = document.getElementById("closeModalBtn");
 
+// Provera prijave
 onAuthStateChanged(auth, user => {
     if (user) {
         statusDiv.textContent = `Prijavljeni ste kao: ${user.displayName || user.email}`;
@@ -135,20 +141,27 @@ onAuthStateChanged(auth, user => {
     }
 });
 
+// Logout
 logoutBtn.addEventListener("click", async () => {
     await signOut(auth);
     alert("Uspešno ste se odjavili.");
     window.location.href = "index.html";
 });
 
-berbaBtn.addEventListener("click", () => {
-    window.location.href = "berba.html";
+// Navigacija
+troskoviBtn.addEventListener("click", () => {
+    window.location.href = "troskovi.html";
 });
 
-sezonskiBtn.addEventListener("click", () => {
-    window.location.href = "sezonski.html";
+prihodiBtn.addEventListener("click", () => {
+    window.location.href = "prihodi.html";
 });
 
+pregledBtn.addEventListener("click", () => {
+    window.location.href = "pregled.html";
+});
+
+// Izveštaji modal
 izvestajBtn.addEventListener("click", () => {
     izvestajModal.style.display = "flex";
 });
@@ -157,12 +170,12 @@ closeModalBtn.addEventListener("click", () => {
     izvestajModal.style.display = "none";
 });
 
-izvestajBerbaBtn.addEventListener("click", () => {
-    window.location.href = "izvestaj_berbe.html";
+izvestajTroskoviBtn.addEventListener("click", () => {
+    window.location.href = "izvestaj_troskovi.html";
 });
 
-izvestajSezonskiBtn.addEventListener("click", () => {
-    window.location.href = "izvestaj_sezonski.html";
+izvestajPrihodiBtn.addEventListener("click", () => {
+    window.location.href = "izvestaj_prihoda.html";
 });
 
 window.addEventListener("click", (e) => {
@@ -173,6 +186,7 @@ window.addEventListener("click", (e) => {
 </script>
 </body>
 </html>
+
 
 
 

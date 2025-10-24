@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Izveštaj prihoda</title>
+
+<!-- CSP za lokalno testiranje -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https: data:; script-src 'self' 'unsafe-inline' https:;">
+
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+body {
+    font-family: 'Rubik', sans-serif;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 10px;
+    background-color: #f7f7f7;
+    color: #2e7d32;
+    text-align: center;
+}
+h2 { margin: 20px 0; }
+form {
+    margin-top: 20px;
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    text-align: left;
+    box-sizing: border-box;
+}
+label { display: block; margin: 10px 0 5px; font-weight: 500; }
+input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    font-size: 15px;
+    margin-bottom: 10px;
+}
+button {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 10px;
+    border: none;
+    background-color: #2e7d32;
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+    margin-top: 10px;
+}
+button:hover { background-color: #27682c; }
+.pdfBtn { background: #1565c0; margin-top: 15px; }
+.backBtn { background: #d32f2f; margin-top: 10px; }
+.results {
+    background: white;
+    border-radius: 10px;
+    padding: 15px;
+    text-align: left;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    margin-top: 20px;
+}
+</style>
+</head>
+<body>
+
+<h2>Izveštaj prihoda</h2>
+
+<form id="filterForm">
+    <label for="datumOd">Datum od:</label>
+    <input type="date" id="datumOd" required>
+
+    <label for="datumDo">Datum do:</label>
+    <input type="date" id="datumDo" required>
+
+    <button type="submit">Prikaži izveštaj</button>
+</form>
+
+<div id="izvestajSadrzaj" style="display:none;">
+    <div id="rezultati" class="results"></div>
+    <button id="pdfBtn" class="pdfBtn">📄 Preuzmi izveštaj (PDF)</button>
+    <button class="backBtn" onclick="window.location.href='dashboard.html'">⬅ Nazad</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBGeFazvjgtDUbB-VSJlEcXDe4bW-r0sJs",
+    authDomain: "agritalia-app.firebaseapp.com",
+    projectId: "agritalia-app",
+    storageBucket: "agritalia-app.appspot.com",
+    messagingSenderId: "935329247921",
+    appId: "1:935329247921:web:d9de1aa832e2432170a890"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+function formatDatum(d) {
+    const date = new Date(d);
+    const dan = String(date.getDate()).padStart(2,'0');
+    const mesec = String(date.getMonth()+1).padStart(2,'0');
+    const godina = date.getFullYear();
+    return `${dan}.${mesec}.${godina}.`;
+}
+
+onAuthStateChanged(auth, user => {
+    if (!user) {
+        alert("Morate biti prijavljeni!");
+        window.location.href = "index.html";
+        return;
+    }
+
+    document.getElementById("filterForm").addEventListener("submit", async e => {
+        e.preventDefault();
+        const datumOd = new Date(document.getElementById("datumOd").value);
+        const datumDo = new Date(document.getElementById("datumDo").value);
+
+        if (datumOd > datumDo) {
+            alert("Datum od ne može biti posle datuma do!");
+            return;
+        }
+
+        const q = query(collection(db, "prihodi"), where("userId", "==", user.uid));
+        const snapshot = await getDocs(q);
+
+        let filtered = [];
+        snapshot.forEach(docSnap => {
+            const p = docSnap.data();
+            if(!p.datum) return;
+            const pDatum = new Date(p.datum);
+            if(pDatum >= datumOd && pDatum <= datumDo) filtered.push(p);
+        });
+
+        if(filtered.length === 0){
+            document.getElementById('rezultati').innerHTML = "<p>Nema prihoda za izabrani period.</p>";
+            document.getElementById('izvestajSadrzaj').style.display = "block";
+            return;
+        }
+
+        let detaljiHTML = "";
+        let total = 0;
+
+        filtered.forEach(p => {
+            const prihodOstalo = parseFloat(p.ostalo?.iznos || 0);
+            const prihodGlavni = parseFloat((p.kolicina || 0) * (p.prodajnaCena || 0));
+            const ukupno = prihodGlavni + prihodOstalo;
+            total += ukupno;
+
+            detaljiHTML += `
+                <div>
+                    <strong>${formatDatum(p.datum)} - ${p.kultura || 'Nepoznata kultura'}</strong><br/>
+                    ${p.kolicina ? `Količina: ${p.kolicina}<br/>` : ''}
+                    ${p.prodajnaCena ? `Prodajna cena: ${p.prodajnaCena} RSD<br/>` : ''}
+                    ${p.ostalo?.iznos ? `Ostalo: ${p.ostalo.iznos} RSD<br/>` : ''}
+                    Napomena: ${p.ostalo?.opis || ''}<br/>
+                    <strong>Ukupno: ${ukupno.toFixed(2)} RSD</strong>
+                </div>
+                <hr>
+            `;
+        });
+
+        const prosek = (total / filtered.length).toFixed(2);
+
+        document.getElementById('rezultati').innerHTML = `
+            <h3>Detalji prihoda</h3>
+            ${detaljiHTML}
+            <h3>Analiza prihoda</h3>
+            <p><strong>Ukupan broj unosa:</strong> ${filtered.length}</p>
+            <p><strong>Ukupan prihod:</strong> ${total.toFixed(2)} RSD</p>
+            <p><strong>Prosečan prihod po unosu:</strong> ${prosek} RSD</p>
+        `;
+
+        document.getElementById('izvestajSadrzaj').style.display = "block";
+    });
+});
+
+// PDF preuzimanje
+document.getElementById('pdfBtn').addEventListener('click', async () => {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF("p", "mm", "a4");
+    const sadrzaj = document.getElementById("izvestajSadrzaj");
+    const canvasImg = await html2canvas(sadrzaj, { scale: 2 });
+    const imgData = canvasImg.toDataURL("image/png");
+    const pdfWidth = 190;
+    const pdfHeight = (canvasImg.height * pdfWidth) / canvasImg.width;
+    pdf.text("Izveštaj prihoda", 15, 15);
+    pdf.addImage(imgData, "PNG", 10, 25, pdfWidth, pdfHeight);
+    const datumOd = document.getElementById('datumOd').value;
+    const datumDo = document.getElementById('datumDo').value;
+    pdf.save(`Izvestaj_prihoda_${datumOd}_do_${datumDo}.pdf`);
+});
+</script>
+
+</body>
+</html>
+
+
+
+
+

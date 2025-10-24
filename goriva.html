@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Troškovi - Goriva</title>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+    * {
+        box-sizing: border-box;
+    }
+    body {
+        font-family: 'Rubik', sans-serif;
+        max-width: 480px;
+        margin: 0 auto;
+        padding: 10px;
+        background-color: #f7f7f7;
+        color: #2e7d32;
+        text-align: center;
+        overflow-x: hidden;
+    }
+    h2 { 
+        margin: 20px 0; 
+    }
+    form {
+        margin-top: 20px;
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    label { 
+        display: block; 
+        margin: 10px 0 5px; 
+        text-align: left; 
+    }
+    input, textarea {
+        width: 100%;
+        padding: 8px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-size: 15px;
+    }
+    textarea { 
+        resize: vertical; 
+    }
+
+    /* Uklanja strelice iz number input polja */
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    input[type=number] {
+        appearance: textfield;
+    }
+
+    button {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 10px;
+        border: none;
+        background-color: #2e7d32;
+        color: white;
+        cursor: pointer;
+        font-weight: 600;
+        margin-top: 15px;
+    }
+    button:hover { 
+        background-color: #27682c; 
+    }
+    .backBtn { 
+        background: #d32f2f; 
+        margin-top: 20px; 
+    }
+    .backBtn:hover {
+        background-color: #b71c1c;
+    }
+</style>
+</head>
+<body>
+
+<h2>Troškovi - Goriva</h2>
+
+<form id="gorivaForm">
+    <label for="datum">Datum:</label>
+    <input type="date" id="datum" required />
+
+    <label for="trosak">Iznos troška (RSD):</label>
+    <input type="number" id="trosak" required />
+
+    <label for="napomena">Napomena:</label>
+    <textarea id="napomena" rows="3" placeholder="(nije obavezno)"></textarea>
+
+    <button type="submit">Sačuvaj trošak</button>
+</form>
+
+<button class="backBtn" type="button" onclick="window.location.href='troskovi.html'">⬅ Nazad</button>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBGeFazvjgtDUbB-VSJlEcXDe4bW-r0sJs",
+    authDomain: "agritalia-app.firebaseapp.com",
+    projectId: "agritalia-app",
+    storageBucket: "agritalia-app.appspot.com",
+    messagingSenderId: "935329247921",
+    appId: "1:935329247921:web:d9de1aa832e2432170a890"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// Provera prijavljenog korisnika
+onAuthStateChanged(auth, user => {
+    if (!user) {
+        alert("Morate biti prijavljeni da biste uneli trošak!");
+        window.location.href = "index.html";
+    }
+});
+
+document.getElementById("gorivaForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const user = auth.currentUser;
+    if (!user) {
+        alert("Morate biti prijavljeni!");
+        return;
+    }
+
+    try {
+        await addDoc(collection(db, "troskovi"), {
+            userId: user.uid,
+            tip: "Goriva",
+            datum: document.getElementById("datum").value,
+            trosak: parseFloat(document.getElementById("trosak").value) || 0,
+            napomena: document.getElementById("napomena").value || "",
+            timestamp: serverTimestamp()
+        });
+
+        alert("Trošak uspešno sačuvan!");
+        e.target.reset();
+    } catch (err) {
+        console.error(err);
+        alert("Greška pri čuvanju troška: " + err.message);
+    }
+});
+</script>
+
+</body>
+</html>
+

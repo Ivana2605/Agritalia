@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pregled</title>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+    body {
+        font-family: 'Rubik', sans-serif;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 10px;
+        background-color: #f7f7f7;
+        color: #2e7d32;
+    }
+    h2 {
+        text-align: center;
+        margin: 20px 0;
+    }
+    .date-list, .details {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        margin: 10px 0;
+        padding: 15px;
+    }
+    .date-item {
+        padding: 10px;
+        margin: 5px 0;
+        background: #e8f5e9;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .date-item:hover {
+        background: #c8e6c9;
+    }
+    .trash {
+        background: none;
+        border: none;
+        color: #d32f2f;
+        font-size: 18px;
+        cursor: pointer;
+    }
+    .trash:hover {
+        color: #9a0007;
+    }
+    .detail {
+        margin: 10px 0;
+        padding: 10px;
+        background: #f1f8e9;
+        border-radius: 8px;
+        border-left: 4px solid #2e7d32;
+    }
+    .detail input {
+        width: 80%;
+        padding: 5px;
+        margin: 3px 0;
+    }
+    .saveBtn {
+        padding: 8px 12px;
+        background: #2e7d32;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        margin-top: 5px;
+    }
+    .saveBtn:hover { background-color: #27682c; }
+    button.backBtn {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 10px;
+        border: none;
+        background-color: #d32f2f;
+        color: white;
+        cursor: pointer;
+        font-weight: 600;
+        margin-top: 20px;
+    }
+</style>
+</head>
+<body>
+
+<h2>Pregled</h2>
+
+<div id="pregled"></div>
+
+<button class="backBtn" type="button" onclick="window.location.href='dashboard.html'">⬅ Nazad</button>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, query, where, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+// Firebase konfiguracija
+const firebaseConfig = {
+    apiKey: "AIzaSyBGeFazvjgtDUbB-VSJlEcXDe4bW-r0sJs",
+    authDomain: "agritalia-app.firebaseapp.com",
+    projectId: "agritalia-app",
+    storageBucket: "agritalia-app.appspot.com",
+    messagingSenderId: "935329247921",
+    appId: "1:935329247921:web:d9de1aa832e2432170a890"
+};
+
+// Inicijalizacija
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+const pregledDiv = document.getElementById("pregled");
+
+// Funkcija za format datuma d.m.Y
+function formatDatum(d) {
+    const date = new Date(d);
+    const dan = date.getDate();
+    const mesec = date.getMonth() + 1;
+    const godina = date.getFullYear();
+    return `${dan}.${mesec}.${godina}.`;
+}
+
+onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+        alert("Morate biti prijavljeni!");
+        window.location.href = "index.html";
+        return;
+    }
+
+    // Učitavanje troškova i prihoda
+    const troskoviSnap = await getDocs(query(collection(db, "troskovi"), where("userId", "==", user.uid)));
+    const prihodiSnap = await getDocs(query(collection(db, "prihodi"), where("userId", "==", user.uid)));
+
+    const poDatumu = {};
+
+    // Grupisanje troškova
+    troskoviSnap.forEach(docSnap => {
+        const t = docSnap.data();
+        t.id = docSnap.id;
+        if (!t.datum) return;
+        if (!poDatumu[t.datum]) poDatumu[t.datum] = [];
+        poDatumu[t.datum].push({
+            id: t.id,
+            tip: t.tip || "Trošak",
+            kolicina: t.kolicina || t.brojRadnika || 0,
+            cena: t.trosak || t.trosakPoRadniku || 0,
+            prevoz: t.trosakPrevoza || 0,
+            napomena: t.napomena || t.opis || ""
+        });
+    });
+
+    // Grupisanje prihoda
+    prihodiSnap.forEach(docSnap => {
+        const p = docSnap.data();
+        p.id = docSnap.id;
+        if (!p.datum) return;
+        if (!poDatumu[p.datum]) poDatumu[p.datum] = [];
+        poDatumu[p.datum].push({
+            id: p.id,
+            tip: `Prihod (${p.kultura || "Nepoznato"})`,
+            kolicina: p.kolicina || 0,
+            cena: p.prodajnaCena || 0,
+            napomena: p.ostalo?.opis || ""
+        });
+    });
+
+    if (Object.keys(poDatumu).length === 0) {
+        pregledDiv.innerHTML = "<p style='text-align:center;'>Nema unetih podataka.</p>";
+        return;
+    }
+
+    // Sortiranje datuma od najnovijeg
+    const datumi = Object.keys(poDatumu).sort((a, b) => b.localeCompare(a));
+
+    // Prikaz datuma
+    pregledDiv.innerHTML = "<div class='date-list'><h3>Izaberite datum:</h3></div>";
+    const listDiv = pregledDiv.querySelector(".date-list");
+
+    datumi.forEach(datum => {
+        const item = document.createElement("div");
+        item.className = "date-item";
+
+        const span = document.createElement("span");
+        span.textContent = formatDatum(datum);
+        span.onclick = () => prikaziDetalje(datum, poDatumu[datum]);
+
+        const delBtn = document.createElement("button");
+        delBtn.className = "trash";
+        delBtn.innerHTML = "🗑️";
+        delBtn.title = "Obriši sve unose za ovaj datum";
+        delBtn.onclick = (e) => {
+            e.stopPropagation(); // sprečava otvaranje detalja
+            obrisiDatum(datum, poDatumu[datum]);
+        };
+
+        item.appendChild(span);
+        item.appendChild(delBtn);
+        listDiv.appendChild(item);
+    });
+});
+
+// Funkcija za prikaz detalja sa mogućnošću izmene
+function prikaziDetalje(datum, podaci) {
+    const detailsDiv = document.createElement("div");
+    detailsDiv.className = "details";
+    let html = `<h3>${formatDatum(datum)}</h3>`;
+
+    podaci.forEach(p => {
+        let ukupno = (p.kolicina * p.cena) + (p.prevoz || 0);
+        html += `
+            <div class="detail">
+                <strong>${p.tip}</strong><br/>
+                Količina/Cena: <input type="number" value="${p.kolicina}" id="kolicina-${p.id}" /> x 
+                <input type="number" value="${p.cena}" id="cena-${p.id}" /><br/>
+                ${p.prevoz ? `Prevoz: <input type="number" value="${p.prevoz}" id="prevoz-${p.id}" /><br/>` : ""}
+                Ukupno: ${ukupno.toFixed(2)} RSD<br/>
+                Napomena: <input type="text" value="${p.napomena}" id="napomena-${p.id}" /><br/>
+                <button class="saveBtn" onclick="sacuvajIzmene('${p.id}', '${p.tip}')">💾 Sačuvaj izmene</button>
+            </div>
+        `;
+    });
+
+    detailsDiv.innerHTML = html;
+
+    pregledDiv.innerHTML = "";
+    pregledDiv.appendChild(detailsDiv);
+
+    // Dugme za povratak
+    const nazadBtn = document.createElement("button");
+    nazadBtn.textContent = "⬅ Nazad na listu datuma";
+    nazadBtn.onclick = () => window.location.reload();
+    pregledDiv.appendChild(nazadBtn);
+}
+
+// Funkcija za čuvanje izmena
+window.sacuvajIzmene = async function(id, tip) {
+    const docRef = doc(db, tip.startsWith("Prihod") ? "prihodi" : "troskovi", id);
+
+    const kolicina = parseFloat(document.getElementById(`kolicina-${id}`).value) || 0;
+    const cena = parseFloat(document.getElementById(`cena-${id}`).value) || 0;
+    const prevozEl = document.getElementById(`prevoz-${id}`);
+    const prevoz = prevozEl ? parseFloat(prevozEl.value) || 0 : 0;
+    const napomena = document.getElementById(`napomena-${id}`).value;
+
+    try {
+        if(tip.startsWith("Prihod")) {
+            await updateDoc(docRef, { kolicina, prodajnaCena: cena, "ostalo.iznos": cena, "ostalo.opis": napomena });
+        } else {
+            await updateDoc(docRef, { kolicina, trosak: cena, trosakPoRadniku: cena, trosakPrevoza: prevoz, napomena });
+        }
+        alert("Izmene sačuvane!");
+        window.location.reload();
+    } catch(err) {
+        console.error(err);
+        alert("Greška pri čuvanju izmena: " + err.message);
+    }
+};
+
+// 🔥 Nova funkcija za brisanje datuma
+async function obrisiDatum(datum, zapisi) {
+    if (!confirm(`Da li ste sigurni da želite obrisati sve unose za datum ${formatDatum(datum)}?`)) return;
+
+    try {
+        for (const p of zapisi) {
+            const ref = doc(db, p.tip.startsWith("Prihod") ? "prihodi" : "troskovi", p.id);
+            await deleteDoc(ref);
+        }
+        alert("Svi unosi za izabrani datum su obrisani.");
+        window.location.reload();
+    } catch (err) {
+        console.error(err);
+        alert("Greška pri brisanju: " + err.message);
+    }
+}
+</script>
+
+</body>
+</html>
+
+
+
+
+

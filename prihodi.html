@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dodaj prihod</title>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+    body {
+        font-family: 'Rubik', sans-serif;
+        max-width: 480px;
+        margin: 0 auto;
+        padding: 10px;
+        background-color: #f7f7f7;
+        color: #2e7d32;
+        text-align: center;
+    }
+    h2 { margin: 20px 0; }
+    form {
+        margin-top: 20px;
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        text-align: left;
+        box-sizing: border-box;
+    }
+    label { display: block; margin: 10px 0 5px; }
+    input, select, textarea {
+        width: 100%;
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+        font-size: 15px;
+    }
+    /* Uklanjanje strelica sa number input polja */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        margin: 0;
+    }
+    input[type=number] {
+        -moz-appearance: textfield;
+        appearance: textfield;
+    }
+    textarea { resize: vertical; }
+
+    button {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 10px;
+        border: none;
+        background-color: #2e7d32;
+        color: white;
+        cursor: pointer;
+        font-weight: 600;
+        margin-top: 15px;
+        box-sizing: border-box;
+    }
+    button:hover { background-color: #27682c; }
+    .backBtn { background: #d32f2f; margin-top: 20px; }
+
+    .collapsible {
+        background-color: #e0e0e0;
+        color: #2e7d32;
+        cursor: pointer;
+        padding: 10px;
+        width: 100%;
+        border: none;
+        text-align: left;
+        outline: none;
+        font-size: 16px;
+        border-radius: 6px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 15px;
+    }
+    .content {
+        display: none;
+        padding: 10px 0;
+        margin-top: 5px;
+    }
+    .arrow {
+        font-weight: bold;
+        transition: transform 0.2s;
+    }
+    .arrow.down {
+        transform: rotate(90deg);
+    }
+    #ukupanPrihodBox {
+        margin-top: 15px;
+        background: #e8f5e9;
+        padding: 10px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-align: center;
+        color: #1b5e20;
+    }
+</style>
+</head>
+<body>
+
+<h2>Dodaj prihod</h2>
+
+<form id="prihodiForm">
+    <label for="kultura">Kultura:</label>
+    <select id="kultura">
+        <option value="" disabled selected>Izaberite kulturu</option>
+        <option value="Malina">Malina</option>
+        <option value="Borovnica">Borovnica</option>
+        <option value="Jagoda">Jagoda</option>
+        <option value="Kukuruz">Kukuruz</option>
+        <option value="Drugo">Drugo (unesite sami)</option>
+    </select>
+    <input type="text" id="kulturaDrugo" placeholder="Unesite kulturu" style="display:none; margin-top:5px;" />
+
+    <label for="kolicina">Količina:</label>
+    <input type="number" id="kolicina" required />
+
+    <label for="prodajnaCena">Prodajna cena (RSD):</label>
+    <input type="number" id="prodajnaCena" required />
+
+    <label for="datum">Datum:</label>
+    <input type="date" id="datum" required />
+
+    <!-- Collapsible Ostalo -->
+    <button type="button" class="collapsible">Ostalo <span class="arrow">▶</span></button>
+    <div class="content">
+        <label for="datumOstalo">Datum:</label>
+        <input type="date" id="datumOstalo" />
+
+        <label for="iznosOstalo">Iznos (RSD):</label>
+        <input type="number" id="iznosOstalo" />
+
+        <label for="opisOstalo">Opis prihoda:</label>
+        <textarea id="opisOstalo" rows="3" placeholder="(nije obavezno)"></textarea>
+    </div>
+
+    <!-- Ukupan prihod -->
+    <div id="ukupanPrihodBox">Ukupan prihod: 0.00 RSD</div>
+
+    <button type="submit">Sačuvaj prihod</button>
+</form>
+
+<button class="backBtn" type="button" onclick="window.location.href='dashboard.html'">⬅ Nazad</button>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+// Firebase konfiguracija
+const firebaseConfig = {
+    apiKey: "AIzaSyBGeFazvjgtDUbB-VSJlEcXDe4bW-r0sJs",
+    authDomain: "agritalia-app.firebaseapp.com",
+    projectId: "agritalia-app",
+    storageBucket: "agritalia-app.appspot.com",
+    messagingSenderId: "935329247921",
+    appId: "1:935329247921:web:d9de1aa832e2432170a890"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// Provera prijavljenog korisnika
+onAuthStateChanged(auth, user => {
+    if (!user) {
+        alert("Morate biti prijavljeni da biste uneli prihod!");
+        window.location.href = "index.html";
+    }
+});
+
+// Polje za unos sopstvene kulture
+const kulturaSelect = document.getElementById("kultura");
+const kulturaDrugo = document.getElementById("kulturaDrugo");
+
+kulturaSelect.addEventListener("change", () => {
+    if(kulturaSelect.value === "Drugo") {
+        kulturaDrugo.style.display = "block";
+        kulturaDrugo.required = true;
+    } else {
+        kulturaDrugo.style.display = "none";
+        kulturaDrugo.required = false;
+    }
+});
+
+// Collapsible Ostalo
+const collapsible = document.querySelector(".collapsible");
+const content = document.querySelector(".content");
+const arrow = document.querySelector(".arrow");
+
+collapsible.addEventListener("click", () => {
+    content.style.display = content.style.display === "block" ? "none" : "block";
+    arrow.classList.toggle("down");
+});
+
+// Proračun ukupnog prihoda
+const kolicinaInput = document.getElementById("kolicina");
+const prodajnaCenaInput = document.getElementById("prodajnaCena");
+const iznosOstaloInput = document.getElementById("iznosOstalo");
+const ukupanPrihodBox = document.getElementById("ukupanPrihodBox");
+
+function izracunajUkupno() {
+    const kolicina = parseFloat(kolicinaInput.value) || 0;
+    const cena = parseFloat(prodajnaCenaInput.value) || 0;
+    const ostalo = parseFloat(iznosOstaloInput.value) || 0;
+    const ukupno = (kolicina * cena) + ostalo;
+    ukupanPrihodBox.textContent = `Ukupan prihod: ${ukupno.toFixed(2)} RSD`;
+    return ukupno;
+}
+
+[kolicinaInput, prodajnaCenaInput, iznosOstaloInput].forEach(el => {
+    el.addEventListener("input", izracunajUkupno);
+});
+
+document.getElementById("prihodiForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const user = auth.currentUser;
+    if (!user) {
+        alert("Morate biti prijavljeni!");
+        return;
+    }
+
+    const kulturaValue = kulturaSelect.value === "Drugo" ? kulturaDrugo.value : kulturaSelect.value;
+    const ukupno = izracunajUkupno();
+
+    try {
+        await addDoc(collection(db, "prihodi"), {
+            userId: user.uid,
+            kultura: kulturaValue,
+            kolicina: parseFloat(kolicinaInput.value),
+            prodajnaCena: parseFloat(prodajnaCenaInput.value),
+            datum: document.getElementById("datum").value,
+            ostalo: {
+                datum: document.getElementById("datumOstalo").value,
+                iznos: parseFloat(iznosOstaloInput.value) || 0,
+                opis: document.getElementById("opisOstalo").value
+            },
+            ukupanPrihod: ukupno,
+            timestamp: serverTimestamp()
+        });
+
+        alert(`Prihod uspešno sačuvan!\nUkupan prihod: ${ukupno.toFixed(2)} RSD`);
+        e.target.reset();
+        kulturaDrugo.style.display = "none";
+        content.style.display = "none";
+        arrow.classList.remove("down");
+        ukupanPrihodBox.textContent = "Ukupan prihod: 0.00 RSD";
+    } catch (err) {
+        console.error(err);
+        alert("Greška pri čuvanju prihoda.");
+    }
+});
+</script>
+
+</body>
+</html>
+
+
+

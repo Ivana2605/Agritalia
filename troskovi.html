@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agritalia - Troškovi</title>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+    body {
+        font-family: 'Rubik', sans-serif;
+        max-width: 480px;
+        margin: 0 auto;
+        padding: 10px;
+        background-color: #f7f7f7;
+        color: #2e7d32;
+        text-align: center;
+    }
+    h2 { margin: 20px 0; }
+    button {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 10px;
+        border: none;
+        background-color: #2e7d32;
+        color: white;
+        cursor: pointer;
+        font-weight: 600;
+        margin: 10px 0;
+    }
+    button:hover { background-color: #27682c; }
+    .backBtn { background: #d32f2f; margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<h2>Troškovi</h2>
+
+<!-- Dugmad za kategorije sa type="button" -->
+<button type="button" onclick="window.location.href='djubriva.html'">Đubriva</button>
+<button type="button" onclick="window.location.href='pesticidi.html'">Pesticidi</button>
+<button type="button" onclick="window.location.href='sezonci.html'">Sezonci</button>
+<button type="button" onclick="window.location.href='goriva.html'">Goriva</button>
+<button type="button" onclick="window.location.href='ostalo.html'">Ostalo</button>
+
+<!-- Nazad na dashboard -->
+<button class="backBtn" type="button" onclick="window.location.href='dashboard.html'">⬅ Nazad</button>
+
+</body>
+</html>
+
