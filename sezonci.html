@@ -6,9 +6,7 @@
 <title>Troškovi - Sezonski radnici</title>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet" />
 <style>
-    * {
-        box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
     body {
         font-family: 'Rubik', sans-serif;
         max-width: 480px;
@@ -56,9 +54,7 @@
         -webkit-appearance: none;
         margin: 0;
     }
-    input[type=number] {
-        appearance: textfield;
-    }
+    input[type=number] { appearance: textfield; -moz-appearance: textfield; }
 </style>
 </head>
 <body>
@@ -72,11 +68,11 @@
     <label for="brojRadnika">Broj angažovanih radnika:</label>
     <input type="number" id="brojRadnika" required />
 
-    <label for="trosakPoRadniku">Trošak po radniku (RSD):</label>
-    <input type="number" id="trosakPoRadniku" required />
+    <label for="trosak">Trošak po radniku (RSD):</label>
+    <input type="number" id="trosak" required />
 
     <label for="trosakPrevoza">Trošak prevoza radnika (RSD):</label>
-    <input type="number" id="trosakPrevoza" required />
+    <input type="number" id="trosakPrevoza" />
 
     <label for="ukupanTrosak">Ukupan trošak (RSD):</label>
     <input type="number" id="ukupanTrosak" readonly style="background:#f0f0f0;" />
@@ -117,19 +113,19 @@ onAuthStateChanged(auth, user => {
 
 // Automatski izračun ukupnog troška
 const brojRadnikaInput = document.getElementById("brojRadnika");
-const trosakPoRadnikuInput = document.getElementById("trosakPoRadniku");
+const trosakInput = document.getElementById("trosak");
 const trosakPrevozaInput = document.getElementById("trosakPrevoza");
 const ukupanInput = document.getElementById("ukupanTrosak");
 
 function izracunajUkupno() {
     const brojRadnika = parseFloat(brojRadnikaInput.value) || 0;
-    const trosakPoRadniku = parseFloat(trosakPoRadnikuInput.value) || 0;
+    const trosak = parseFloat(trosakInput.value) || 0;
     const trosakPrevoza = parseFloat(trosakPrevozaInput.value) || 0;
-    ukupanInput.value = (brojRadnika * trosakPoRadniku + trosakPrevoza).toFixed(2);
+    ukupanInput.value = (brojRadnika * trosak + trosakPrevoza).toFixed(2);
 }
 
 brojRadnikaInput.addEventListener("input", izracunajUkupno);
-trosakPoRadnikuInput.addEventListener("input", izracunajUkupno);
+trosakInput.addEventListener("input", izracunajUkupno);
 trosakPrevozaInput.addEventListener("input", izracunajUkupno);
 
 // Slanje podataka u Firestore
@@ -143,9 +139,8 @@ document.getElementById("sezonciForm").addEventListener("submit", async (e) => {
     }
 
     const brojRadnika = parseInt(brojRadnikaInput.value) || 0;
-    const trosakPoRadniku = parseFloat(trosakPoRadnikuInput.value) || 0;
+    const trosak = parseFloat(trosakInput.value) || 0;
     const trosakPrevoza = parseFloat(trosakPrevozaInput.value) || 0;
-    const ukupanTrosak = parseFloat(ukupanInput.value) || 0;
 
     try {
         await addDoc(collection(db, "troskovi"), {
@@ -153,9 +148,8 @@ document.getElementById("sezonciForm").addEventListener("submit", async (e) => {
             tip: "Sezonci",
             datum: document.getElementById("datum").value,
             brojRadnika: brojRadnika,
-            trosakPoRadniku: trosakPoRadniku,
+            trosak: trosak, // standardizovano polje
             trosakPrevoza: trosakPrevoza,
-            ukupanTrosak: ukupanTrosak,
             napomena: document.getElementById("napomena").value || "",
             timestamp: serverTimestamp()
         });

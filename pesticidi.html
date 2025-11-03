@@ -15,9 +15,7 @@
         color: #2e7d32;
         text-align: center;
     }
-
     h2 { margin: 20px 0; }
-
     form {
         margin-top: 20px;
         background: white;
@@ -25,15 +23,12 @@
         border-radius: 10px;
         box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
-
-    /* Stil input polja */
     label {
         display: block;
         margin: 10px 0 5px;
         text-align: left;
         font-weight: 500;
     }
-
     input, textarea {
         display: block;
         width: 100%;
@@ -45,15 +40,12 @@
         outline: none;
         transition: border-color 0.2s, box-shadow 0.2s;
     }
-
     input:focus, textarea:focus {
         border-color: #2e7d32;
         box-shadow: 0 0 3px rgba(46, 125, 50, 0.3);
     }
-
     textarea { resize: vertical; }
-
-    /* Uklanjanje strelica iz brojevnih polja (svi browseri) */
+    /* Uklanjanje strelica iz brojevnih polja */
     input[type=number]::-webkit-inner-spin-button, 
     input[type=number]::-webkit-outer-spin-button {
         -webkit-appearance: none;
@@ -61,9 +53,8 @@
     }
     input[type=number] {
         appearance: textfield;
-        -moz-appearance: textfield; /* dodatno za Firefox */
+        -moz-appearance: textfield;
     }
-
     button {
         width: 100%;
         padding: 12px;
@@ -77,9 +68,7 @@
         margin-top: 15px;
         transition: background-color 0.2s;
     }
-
     button:hover { background-color: #27682c; }
-
     .backBtn {
         background: #d32f2f;
         margin-top: 20px;
@@ -90,7 +79,7 @@
 
 <h2>Troškovi - Pesticidi</h2>
 
-<form id="djubrivaForm">
+<form id="pesticidiForm">
     <label for="datum">Datum:</label>
     <input type="date" id="datum" required />
 
@@ -152,7 +141,7 @@ onAuthStateChanged(auth, user => {
     }
 });
 
-document.getElementById("djubrivaForm").addEventListener("submit", async (e) => {
+document.getElementById("pesticidiForm").addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const user = auth.currentUser;
@@ -163,16 +152,14 @@ document.getElementById("djubrivaForm").addEventListener("submit", async (e) => 
 
     const kolicina = parseFloat(kolicinaInput.value) || 0;
     const trosak = parseFloat(trosakInput.value) || 0;
-    const ukupanTrosak = parseFloat(ukupanInput.value) || 0;
 
     try {
         await addDoc(collection(db, "troskovi"), {
             userId: user.uid,
-            tip: "Đubriva",
+            tip: "Pesticidi",
             datum: document.getElementById("datum").value,
             kolicina: kolicina,
-            trosakPoJedinici: trosak,
-            ukupanTrosak: ukupanTrosak,
+            trosak: trosak, // ovo polje je sada uniformno sa svim troškovima
             napomena: document.getElementById("napomena").value || "",
             timestamp: serverTimestamp()
         });

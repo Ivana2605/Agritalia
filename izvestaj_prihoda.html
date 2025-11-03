@@ -113,6 +113,11 @@ function formatDatum(d) {
     return `${dan}.${mesec}.${godina}.`;
 }
 
+// Format broja na srpski način
+function formatBroj(n) {
+    return new Intl.NumberFormat('sr-RS', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+}
+
 onAuthStateChanged(auth, user => {
     if (!user) {
         alert("Morate biti prijavljeni!");
@@ -159,25 +164,22 @@ onAuthStateChanged(auth, user => {
             detaljiHTML += `
                 <div>
                     <strong>${formatDatum(p.datum)} - ${p.kultura || 'Nepoznata kultura'}</strong><br/>
-                    ${p.kolicina ? `Količina: ${p.kolicina}<br/>` : ''}
-                    ${p.prodajnaCena ? `Prodajna cena: ${p.prodajnaCena} RSD<br/>` : ''}
-                    ${p.ostalo?.iznos ? `Ostalo: ${p.ostalo.iznos} RSD<br/>` : ''}
+                    ${p.kolicina ? `Količina: ${formatBroj(p.kolicina)}<br/>` : ''}
+                    ${p.prodajnaCena ? `Prodajna cena: ${formatBroj(p.prodajnaCena)} RSD<br/>` : ''}
+                    ${p.ostalo?.iznos ? `Ostalo: ${formatBroj(p.ostalo.iznos)} RSD<br/>` : ''}
                     Napomena: ${p.ostalo?.opis || ''}<br/>
-                    <strong>Ukupno: ${ukupno.toFixed(2)} RSD</strong>
+                    <strong>Ukupno: ${formatBroj(ukupno)} RSD</strong>
                 </div>
                 <hr>
             `;
         });
-
-        const prosek = (total / filtered.length).toFixed(2);
 
         document.getElementById('rezultati').innerHTML = `
             <h3>Detalji prihoda</h3>
             ${detaljiHTML}
             <h3>Analiza prihoda</h3>
             <p><strong>Ukupan broj unosa:</strong> ${filtered.length}</p>
-            <p><strong>Ukupan prihod:</strong> ${total.toFixed(2)} RSD</p>
-            <p><strong>Prosečan prihod po unosu:</strong> ${prosek} RSD</p>
+            <p><strong>Ukupan prihod:</strong> ${formatBroj(total)} RSD</p>
         `;
 
         document.getElementById('izvestajSadrzaj').style.display = "block";
@@ -203,6 +205,7 @@ document.getElementById('pdfBtn').addEventListener('click', async () => {
 
 </body>
 </html>
+
 
 
 

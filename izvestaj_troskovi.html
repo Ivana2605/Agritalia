@@ -86,7 +86,6 @@ canvas { margin-top: 20px; }
     <button id="pdfBtn" class="pdfBtn">📄 Preuzmi izveštaj (PDF)</button>
 </div>
 
-<!-- Dugme Nazad -->
 <button class="backBtn" type="button" onclick="window.location.href='troskovi.html'">⬅ Nazad</button>
 
 <script type="module">
@@ -114,6 +113,11 @@ function formatDatum(d) {
     const mesec = String(date.getMonth()+1).padStart(2,'0');
     const godina = date.getFullYear();
     return `${dan}.${mesec}.${godina}.`;
+}
+
+// Format broja na srpski način
+function formatBroj(n) {
+    return new Intl.NumberFormat('sr-RS', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 }
 
 onAuthStateChanged(auth, async (user) => {
@@ -167,29 +171,26 @@ onAuthStateChanged(auth, async (user) => {
             detaljiHTML += `
                 <div>
                     <strong>${formatDatum(t.datum)} - ${t.tip}</strong><br/>
-                    ${t.kolicina ? `Količina: ${t.kolicina}<br/>` : ''}
+                    ${t.kolicina ? `Količina: ${formatBroj(t.kolicina)}<br/>` : ''}
                     ${t.brojRadnika ? `Broj radnika: ${t.brojRadnika}<br/>` : ''}
-                    ${t.trosakPoRadniku ? `Cena po radniku: ${t.trosakPoRadniku} RSD<br/>` : ''}
-                    ${t.trosakPrevoza ? `Prevoz: ${t.trosakPrevoza} RSD<br/>` : ''}
-                    ${t.trosak ? `Cena: ${t.trosak} RSD<br/>` : ''}
+                    ${t.trosakPoRadniku ? `Cena po radniku: ${formatBroj(t.trosakPoRadniku)} RSD<br/>` : ''}
+                    ${t.trosakPrevoza ? `Prevoz: ${formatBroj(t.trosakPrevoza)} RSD<br/>` : ''}
+                    ${t.trosak ? `Cena: ${formatBroj(t.trosak)} RSD<br/>` : ''}
                     Napomena: ${t.napomena || ''}<br/>
-                    <strong>Ukupno: ${ukupno.toFixed(2)} RSD</strong>
+                    <strong>Ukupno: ${formatBroj(ukupno)} RSD</strong>
                 </div>
                 <hr>
             `;
         });
-
-        const prosek = (total / filtered.length).toFixed(2);
 
         document.getElementById('rezultati').innerHTML = `
             <h3>Detalji troškova</h3>
             ${detaljiHTML}
             <h3>Analiza troškova</h3>
             <p><strong>Ukupan broj unosa:</strong> ${filtered.length}</p>
-            <p><strong>Ukupan trošak:</strong> ${total.toFixed(2)} RSD</p>
-            <p><strong>Prosečan trošak po unosu:</strong> ${prosek} RSD</p>
+            <p><strong>Ukupan trošak:</strong> ${formatBroj(total)} RSD</p>
             <ul>
-                ${Object.entries(poTipu).map(([tip,vrednost])=>`<li>${tip}: <strong>${vrednost.toFixed(2)} RSD</strong></li>`).join('')}
+                ${Object.entries(poTipu).map(([tip,vrednost])=>`<li>${tip}: <strong>${formatBroj(vrednost)} RSD</strong></li>`).join('')}
             </ul>
         `;
 
