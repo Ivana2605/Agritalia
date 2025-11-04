@@ -5,9 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Izveštaj prihoda</title>
 
-<!-- CSP za lokalno testiranje -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https: data:; script-src 'self' 'unsafe-inline' https:;">
-
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -48,15 +45,14 @@ button {
     font-size: 16px;
     border-radius: 10px;
     border: none;
-    background-color: #2e7d32;
     color: white;
     cursor: pointer;
     font-weight: 600;
     margin-top: 10px;
 }
-button:hover { background-color: #27682c; }
+button:hover { opacity: 0.9; }
 .pdfBtn { background: #1565c0; margin-top: 15px; }
-.backBtn { background: #d32f2f; margin-top: 10px; }
+.backBtn { background: #d32f2f; margin-top: 20px; }
 .results {
     background: white;
     border-radius: 10px;
@@ -78,14 +74,20 @@ button:hover { background-color: #27682c; }
     <label for="datumDo">Datum do:</label>
     <input type="date" id="datumDo" required>
 
-    <button type="submit">Prikaži izveštaj</button>
+    <!-- Novo obavezno polje broj parcele -->
+    <label for="brojParcele">Broj parcele:</label>
+    <input type="text" id="brojParcele" placeholder="npr. 12a, 5/3..." required>
+
+    <button type="submit" style="background-color:#2e7d32;">Prikaži izveštaj</button>
 </form>
 
 <div id="izvestajSadrzaj" style="display:none;">
     <div id="rezultati" class="results"></div>
     <button id="pdfBtn" class="pdfBtn">📄 Preuzmi izveštaj (PDF)</button>
-    <button class="backBtn" onclick="window.location.href='dashboard.html'">⬅ Nazad</button>
 </div>
+
+<!-- Dugme nazad dole -->
+<button class="backBtn" type="button" onclick="window.location.href='dashboard.html'">⬅ Nazad</button>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -113,7 +115,6 @@ function formatDatum(d) {
     return `${dan}.${mesec}.${godina}.`;
 }
 
-// Format broja na srpski način
 function formatBroj(n) {
     return new Intl.NumberFormat('sr-RS', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 }
@@ -129,6 +130,7 @@ onAuthStateChanged(auth, user => {
         e.preventDefault();
         const datumOd = new Date(document.getElementById("datumOd").value);
         const datumDo = new Date(document.getElementById("datumDo").value);
+        const brojParceleFilter = document.getElementById("brojParcele").value.trim();
 
         if (datumOd > datumDo) {
             alert("Datum od ne može biti posle datuma do!");
@@ -143,11 +145,15 @@ onAuthStateChanged(auth, user => {
             const p = docSnap.data();
             if(!p.datum) return;
             const pDatum = new Date(p.datum);
-            if(pDatum >= datumOd && pDatum <= datumDo) filtered.push(p);
+            if(pDatum >= datumOd && pDatum <= datumDo) {
+                if(!brojParceleFilter || p.brojParcele === brojParceleFilter) {
+                    filtered.push(p);
+                }
+            }
         });
 
         if(filtered.length === 0){
-            document.getElementById('rezultati').innerHTML = "<p>Nema prihoda za izabrani period.</p>";
+            document.getElementById('rezultati').innerHTML = "<p>Nema prihoda za izabrani period i parcelu.</p>";
             document.getElementById('izvestajSadrzaj').style.display = "block";
             return;
         }
@@ -164,6 +170,7 @@ onAuthStateChanged(auth, user => {
             detaljiHTML += `
                 <div>
                     <strong>${formatDatum(p.datum)} - ${p.kultura || 'Nepoznata kultura'}</strong><br/>
+                    Broj parcele: ${p.brojParcele || ''}<br/>
                     ${p.kolicina ? `Količina: ${formatBroj(p.kolicina)}<br/>` : ''}
                     ${p.prodajnaCena ? `Prodajna cena: ${formatBroj(p.prodajnaCena)} RSD<br/>` : ''}
                     ${p.ostalo?.iznos ? `Ostalo: ${formatBroj(p.ostalo.iznos)} RSD<br/>` : ''}
@@ -186,7 +193,6 @@ onAuthStateChanged(auth, user => {
     });
 });
 
-// PDF preuzimanje
 document.getElementById('pdfBtn').addEventListener('click', async () => {
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF("p", "mm", "a4");
@@ -199,12 +205,18 @@ document.getElementById('pdfBtn').addEventListener('click', async () => {
     pdf.addImage(imgData, "PNG", 10, 25, pdfWidth, pdfHeight);
     const datumOd = document.getElementById('datumOd').value;
     const datumDo = document.getElementById('datumDo').value;
-    pdf.save(`Izvestaj_prihoda_${datumOd}_do_${datumDo}.pdf`);
+    const brojParcele = document.getElementById('brojParcele').value.trim();
+    pdf.save(`Izvestaj_prihoda_parcela_${brojParcele}_${datumOd}_do_${datumDo}.pdf`);
 });
 </script>
 
 </body>
 </html>
+
+
+
+
+
 
 
 

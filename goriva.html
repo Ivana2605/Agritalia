@@ -77,6 +77,9 @@
     <label for="datum">Datum:</label>
     <input type="date" id="datum" required />
 
+    <label for="brojParcele">Broj parcele:</label>
+    <input type="text" id="brojParcele" placeholder="npr. 12a, 5/3..." required />
+
     <label for="trosak">Iznos troška (RSD):</label>
     <input type="number" id="trosak" required />
 
@@ -128,6 +131,7 @@ document.getElementById("gorivaForm").addEventListener("submit", async (e) => {
             userId: user.uid,
             tip: "Goriva",
             datum: document.getElementById("datum").value,
+            brojParcele: document.getElementById("brojParcele").value.trim(),
             trosak: parseFloat(document.getElementById("trosak").value) || 0,
             napomena: document.getElementById("napomena").value || "",
             timestamp: serverTimestamp()

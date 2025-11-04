@@ -119,14 +119,17 @@
     </select>
     <input type="text" id="kulturaDrugo" placeholder="Unesite kulturu" style="display:none; margin-top:5px;" />
 
+    <label for="datum">Datum:</label>
+    <input type="date" id="datum" required />
+
+    <label for="brojParcele">Broj parcele:</label>
+    <input type="text" id="brojParcele" placeholder="npr. 12a, 5/3..." required />
+
     <label for="kolicina">Količina:</label>
     <input type="number" id="kolicina" required />
 
     <label for="prodajnaCena">Prodajna cena (RSD):</label>
     <input type="number" id="prodajnaCena" required />
-
-    <label for="datum">Datum:</label>
-    <input type="date" id="datum" required />
 
     <!-- Collapsible Ostalo -->
     <button type="button" class="collapsible">Ostalo <span class="arrow">▶</span></button>
@@ -235,6 +238,7 @@ document.getElementById("prihodiForm").addEventListener("submit", async (e) => {
         await addDoc(collection(db, "prihodi"), {
             userId: user.uid,
             kultura: kulturaValue,
+            brojParcele: document.getElementById("brojParcele").value.trim(),
             kolicina: parseFloat(kolicinaInput.value),
             prodajnaCena: parseFloat(prodajnaCenaInput.value),
             datum: document.getElementById("datum").value,
@@ -262,6 +266,7 @@ document.getElementById("prihodiForm").addEventListener("submit", async (e) => {
 
 </body>
 </html>
+
 
 
 

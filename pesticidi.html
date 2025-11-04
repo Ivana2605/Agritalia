@@ -73,6 +73,7 @@
         background: #d32f2f;
         margin-top: 20px;
     }
+    .backBtn:hover { background-color: #b71c1c; }
 </style>
 </head>
 <body>
@@ -82,6 +83,9 @@
 <form id="pesticidiForm">
     <label for="datum">Datum:</label>
     <input type="date" id="datum" required />
+
+    <label for="brojParcele">Broj parcele:</label>
+    <input type="text" id="brojParcele" placeholder="npr. 12a, 5/3..." required />
 
     <label for="kolicina">Količina:</label>
     <input type="number" id="kolicina" required />
@@ -158,8 +162,9 @@ document.getElementById("pesticidiForm").addEventListener("submit", async (e) =>
             userId: user.uid,
             tip: "Pesticidi",
             datum: document.getElementById("datum").value,
+            brojParcele: document.getElementById("brojParcele").value.trim(),
             kolicina: kolicina,
-            trosak: trosak, // ovo polje je sada uniformno sa svim troškovima
+            trosak: trosak,
             napomena: document.getElementById("napomena").value || "",
             timestamp: serverTimestamp()
         });
@@ -176,5 +181,6 @@ document.getElementById("pesticidiForm").addEventListener("submit", async (e) =>
 
 </body>
 </html>
+
 
 

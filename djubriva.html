@@ -15,7 +15,9 @@ body {
     color: #2e7d32;
     text-align: center;
 }
-h2 { margin: 20px 0; }
+h2 { 
+    margin: 20px 0; 
+}
 form {
     margin-top: 20px;
     background: white;
@@ -63,6 +65,7 @@ button {
 }
 button:hover { background-color: #27682c; }
 .backBtn { background: #d32f2f; margin-top: 20px; }
+.backBtn:hover { background-color: #b71c1c; }
 </style>
 </head>
 <body>
@@ -72,6 +75,9 @@ button:hover { background-color: #27682c; }
 <form id="djubrivaForm">
     <label for="datum">Datum:</label>
     <input type="date" id="datum" required />
+
+    <label for="brojParcele">Broj parcele:</label>
+    <input type="text" id="brojParcele" placeholder="npr. 12a, 5/3..." required />
 
     <label for="kolicina">Količina:</label>
     <input type="number" id="kolicina" required />
@@ -144,8 +150,9 @@ document.getElementById("djubrivaForm").addEventListener("submit", async (e) => 
             userId: user.uid,
             tip: "Đubriva",
             datum: document.getElementById("datum").value,
+            brojParcele: document.getElementById("brojParcele").value.trim(),
             kolicina: kolicina,
-            trosak: trosak,      // <-- standardizovano
+            trosak: trosak,
             napomena: document.getElementById("napomena").value || "",
             timestamp: serverTimestamp()
         });
@@ -161,4 +168,5 @@ document.getElementById("djubrivaForm").addEventListener("submit", async (e) => 
 
 </body>
 </html>
+
 

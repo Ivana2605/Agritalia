@@ -83,7 +83,7 @@
 <img src="logo.png" alt="Agritalia Logo" class="logo" />
 <div id="status">Provera prijave...</div>
 
-<!-- Nova dugmad -->
+<!-- Dugmad -->
 <button id="troskoviBtn">Troškovi</button>
 <button id="prihodiBtn">Prihodi</button>
 <button id="pregledBtn">Pregled</button>
@@ -97,6 +97,7 @@
         <h3>Izaberite tip izveštaja</h3>
         <button id="izvestajTroskoviBtn">Izveštaj troškova</button>
         <button id="izvestajPrihodiBtn">Izveštaj prihoda</button>
+        <button id="BilansBtn">Bilans</button>
         <button class="close-btn" id="closeModalBtn">Otkaži</button>
     </div>
 </div>
@@ -120,7 +121,7 @@ const auth = getAuth(app);
 const statusDiv = document.getElementById("status");
 const logoutBtn = document.getElementById("logoutBtn");
 
-// Nova dugmad
+// Dugmad
 const troskoviBtn = document.getElementById("troskoviBtn");
 const prihodiBtn = document.getElementById("prihodiBtn");
 const pregledBtn = document.getElementById("pregledBtn");
@@ -130,6 +131,7 @@ const izvestajBtn = document.getElementById("izvestajBtn");
 const izvestajModal = document.getElementById("izvestajModal");
 const izvestajTroskoviBtn = document.getElementById("izvestajTroskoviBtn");
 const izvestajPrihodiBtn = document.getElementById("izvestajPrihodiBtn");
+const izvestajBilansBtn = document.getElementById("BilansBtn");
 const closeModalBtn = document.getElementById("closeModalBtn");
 
 // Provera prijave
@@ -148,36 +150,25 @@ logoutBtn.addEventListener("click", async () => {
     window.location.href = "index.html";
 });
 
-// Navigacija
-troskoviBtn.addEventListener("click", () => {
-    window.location.href = "troskovi.html";
-});
+// Navigacija glavna dugmad
+troskoviBtn.addEventListener("click", () => { window.location.href = "troskovi.html"; });
+prihodiBtn.addEventListener("click", () => { window.location.href = "prihodi.html"; });
+pregledBtn.addEventListener("click", () => { window.location.href = "pregled.html"; });
 
-prihodiBtn.addEventListener("click", () => {
-    window.location.href = "prihodi.html";
-});
-
-pregledBtn.addEventListener("click", () => {
-    window.location.href = "pregled.html";
-});
-
-// Izveštaji modal
+// Modal Izveštaji
 izvestajBtn.addEventListener("click", () => {
     izvestajModal.style.display = "flex";
 });
-
 closeModalBtn.addEventListener("click", () => {
     izvestajModal.style.display = "none";
 });
 
-izvestajTroskoviBtn.addEventListener("click", () => {
-    window.location.href = "izvestaj_troskovi.html";
-});
+// Navigacija iz modal dugmadi
+izvestajTroskoviBtn.addEventListener("click", () => { window.location.href = "izvestaj_troskovi.html"; });
+izvestajPrihodiBtn.addEventListener("click", () => { window.location.href = "izvestaj_prihoda.html"; });
+izvestajBilansBtn.addEventListener("click", () => { window.location.href = "Bilans.html"; });
 
-izvestajPrihodiBtn.addEventListener("click", () => {
-    window.location.href = "izvestaj_prihoda.html";
-});
-
+// Zatvaranje modala klikom van njega
 window.addEventListener("click", (e) => {
     if (e.target === izvestajModal) {
         izvestajModal.style.display = "none";

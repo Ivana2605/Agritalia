@@ -47,6 +47,7 @@
     }
     button:hover { background-color: #27682c; }
     .backBtn { background: #d32f2f; margin-top: 20px; }
+    .backBtn:hover { background-color: #b71c1c; }
 
     /* Uklanja strelice iz input[type=number] */
     input[type=number]::-webkit-inner-spin-button, 
@@ -64,6 +65,9 @@
 <form id="sezonciForm">
     <label for="datum">Datum:</label>
     <input type="date" id="datum" required />
+
+    <label for="brojParcele">Broj parcele:</label>
+    <input type="text" id="brojParcele" placeholder="npr. 12a, 5/3..." required />
 
     <label for="brojRadnika">Broj angažovanih radnika:</label>
     <input type="number" id="brojRadnika" required />
@@ -147,8 +151,9 @@ document.getElementById("sezonciForm").addEventListener("submit", async (e) => {
             userId: user.uid,
             tip: "Sezonci",
             datum: document.getElementById("datum").value,
+            brojParcele: document.getElementById("brojParcele").value.trim(),
             brojRadnika: brojRadnika,
-            trosak: trosak, // standardizovano polje
+            trosak: trosak,
             trosakPrevoza: trosakPrevoza,
             napomena: document.getElementById("napomena").value || "",
             timestamp: serverTimestamp()
@@ -166,6 +171,7 @@ document.getElementById("sezonciForm").addEventListener("submit", async (e) => {
 
 </body>
 </html>
+
 
 
 
