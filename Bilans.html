@@ -91,6 +91,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+// 🔥 Firebase konfiguracija
 const firebaseConfig = {
     apiKey: "AIzaSyBGeFazvjgtDUbB-VSJlEcXDe4bW-r0sJs",
     authDomain: "agritalia-app.firebaseapp.com",
@@ -125,36 +126,55 @@ onAuthStateChanged(auth, async (user) => {
             return;
         }
 
+        // 🔹 Učitavanje prihoda i troškova
         const prihodiQ = query(collection(db, "prihodi"), where("userId", "==", user.uid));
         const troskoviQ = query(collection(db, "troskovi"), where("userId", "==", user.uid));
         const [prihodiSnap, troskoviSnap] = await Promise.all([getDocs(prihodiQ), getDocs(troskoviQ)]);
 
-        let ukupniPrihodi = 0, ukupniTroskovi = 0;
+        let ukupniPrihodi = 0;
+        let ukupniTroskovi = 0;
 
+        // 🔹 Sabiranje prihoda
         prihodiSnap.forEach(docSnap => {
             const p = docSnap.data();
             if (!p.datum) return;
             if (p.datum >= datumOd && p.datum <= datumDo) {
-                const prihodOstalo = parseFloat(p.ostalo?.iznos || 0);
                 const prihodGlavni = parseFloat((p.kolicina || 0) * (p.prodajnaCena || 0));
+                const prihodOstalo = parseFloat(p.ostalo?.iznos || 0);
                 ukupniPrihodi += prihodGlavni + prihodOstalo;
             }
         });
 
+        // 🔹 Sabiranje troškova (sve vrste)
         troskoviSnap.forEach(docSnap => {
             const t = docSnap.data();
             if (!t.datum) return;
             if (t.datum >= datumOd && t.datum <= datumDo) {
-                let ukupno = t.trosak || 0;
-                if (t.tip === "Sezonci") {
-                    ukupno = (t.trosakPoRadniku || 0) * (t.brojRadnika || 0) + (t.trosakPrevoza || 0);
-                } else if (t.tip === "Đubriva" || t.tip === "Pesticidi") {
-                    ukupno = (t.trosak || 0) * (t.kolicina || 1);
+                let ukupno = 0;
+
+                switch (t.tip) {
+                    case "Sezonci":
+                        ukupno = (t.trosakPoRadniku || 0) * (t.brojRadnika || 0) + (t.trosakPrevoza || 0);
+                        break;
+                    case "Đubriva":
+                    case "Pesticidi":
+                        ukupno = (t.trosak || 0) * (t.kolicina || 1);
+                        break;
+                    case "Gorivo":
+                        ukupno = (t.kolicinaLitara || 0) * (t.cenaPoLitru || 0) || t.trosak || 0;
+                        break;
+                    case "Ostalo":
+                        ukupno = t.iznos || t.trosak || 0;
+                        break;
+                    default:
+                        ukupno = t.trosak || t.iznos || 0;
                 }
+
                 ukupniTroskovi += ukupno;
             }
         });
 
+        // 🔹 Izračunavanje bilansa
         const bilans = ukupniPrihodi - ukupniTroskovi;
         const rezultatHTML = `
             <h3>Rezime bilansa</h3>
@@ -172,6 +192,7 @@ onAuthStateChanged(auth, async (user) => {
     });
 });
 
+// 🔹 Generisanje PDF izveštaja
 document.getElementById('pdfBtn').addEventListener('click', async () => {
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF("p", "mm", "a4");

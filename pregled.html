@@ -137,7 +137,7 @@ function formatDatum(d) {
     return `${dan}.${mesec}.${godina}.`;
 }
 
-// Format broja na srpski način (65.000,00)
+// Format broja (65.000,00)
 function formatBroj(n) {
     return new Intl.NumberFormat('sr-RS', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 }
@@ -160,12 +160,41 @@ onAuthStateChanged(auth, async (user) => {
         t.id = docSnap.id;
         if (!t.datum) return;
         if (!poDatumu[t.datum]) poDatumu[t.datum] = [];
+
+        let kolicina = 0;
+        let cena = 0;
+        let prevoz = 0;
+
+        switch (t.tip) {
+            case "Gorivo":
+                kolicina = t.kolicinaLitara || 0;
+                cena = t.cenaPoLitru || 0;
+                break;
+            case "Sezonci":
+                kolicina = t.brojRadnika || 0;
+                cena = t.trosakPoRadniku || 0;
+                prevoz = t.trosakPrevoza || 0;
+                break;
+            case "Đubriva":
+            case "Pesticidi":
+                kolicina = t.kolicina || 0;
+                cena = t.trosak || t.trosakPoJedinici || 0;
+                break;
+            case "Ostalo":
+                kolicina = 1;
+                cena = t.iznos || t.trosak || 0;
+                break;
+            default:
+                kolicina = t.kolicina || t.brojRadnika || 0;
+                cena = t.trosak || t.trosakPoRadniku || t.trosakPoJedinici || 0;
+        }
+
         poDatumu[t.datum].push({
             id: t.id,
             tip: t.tip || "Trošak",
-            kolicina: t.kolicina || t.brojRadnika || 0,
-            cena: t.trosak || t.trosakPoJedinici || t.trosakPoRadniku || 0,
-            prevoz: t.trosakPrevoza || 0,
+            kolicina,
+            cena,
+            prevoz,
             napomena: t.napomena || t.opis || ""
         });
     });
@@ -176,12 +205,17 @@ onAuthStateChanged(auth, async (user) => {
         p.id = docSnap.id;
         if (!p.datum) return;
         if (!poDatumu[p.datum]) poDatumu[p.datum] = [];
+
+        const prihodGlavni = p.kolicina || 0;
+        const cena = p.prodajnaCena || p.ostalo?.iznos || 0;
+        const napomena = p.ostalo?.opis || "";
+
         poDatumu[p.datum].push({
             id: p.id,
             tip: `Prihod (${p.kultura || "Nepoznato"})`,
-            kolicina: p.kolicina || 0,
-            cena: p.prodajnaCena || p.ostalo?.iznos || 0,
-            napomena: p.ostalo?.opis || ""
+            kolicina: prihodGlavni,
+            cena,
+            napomena
         });
     });
 
@@ -311,6 +345,7 @@ async function obrisiDatum(datum, zapisi) {
 
 </body>
 </html>
+
 
 
 
