@@ -23,36 +23,35 @@ h2 { margin: 20px 0; }
 form {
     margin-top: 20px;
     background: white;
-    padding: 15px;
+    padding: 20px;
     border-radius: 10px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     text-align: left;
-    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
-label { display: block; margin: 10px 0 5px; font-weight: 500; }
-input {
+label { font-weight: 500; margin-bottom: 5px; }
+input, button {
     width: 100%;
     padding: 10px;
     border-radius: 6px;
     border: 1px solid #ccc;
-    box-sizing: border-box;
     font-size: 15px;
-    margin-bottom: 10px;
+    box-sizing: border-box;
 }
 button {
-    width: 100%;
-    padding: 12px;
-    font-size: 16px;
-    border-radius: 10px;
-    border: none;
+    background-color: #2e7d32;
     color: white;
-    cursor: pointer;
     font-weight: 600;
-    margin-top: 10px;
+    cursor: pointer;
+    border: none;
+    transition: 0.2s;
 }
-button:hover { opacity: 0.9; }
+button:hover { background-color: #27682c; }
 .pdfBtn { background: #1565c0; margin-top: 15px; }
 .backBtn { background: #d32f2f; margin-top: 20px; }
+.backBtn:hover { background-color: #b71c1c; }
 .results {
     background: white;
     border-radius: 10px;
@@ -70,13 +69,19 @@ button:hover { opacity: 0.9; }
 <h2>Bilans</h2>
 
 <form id="filterForm">
-    <label for="datumOd">Datum od:</label>
-    <input type="date" id="datumOd" required>
-
-    <label for="datumDo">Datum do:</label>
-    <input type="date" id="datumDo" required>
-
-    <button type="submit" style="background-color:#2e7d32;">Prikaži bilans</button>
+    <div>
+        <label for="datumOd">Datum od:</label>
+        <input type="date" id="datumOd" required>
+    </div>
+    <div>
+        <label for="datumDo">Datum do:</label>
+        <input type="date" id="datumDo" required>
+    </div>
+    <div>
+        <label for="brojParcele">Broj parcele:</label>
+        <input type="text" id="brojParcele" placeholder="npr. 12a, 5/3..." required>
+    </div>
+    <button type="submit">Prikaži bilans</button>
 </form>
 
 <div id="izvestajSadrzaj" style="display:none;">
@@ -91,7 +96,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-// 🔥 Firebase konfiguracija
 const firebaseConfig = {
     apiKey: "AIzaSyBGeFazvjgtDUbB-VSJlEcXDe4bW-r0sJs",
     authDomain: "agritalia-app.firebaseapp.com",
@@ -109,6 +113,14 @@ function formatBroj(n) {
     return new Intl.NumberFormat('sr-RS', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 }
 
+function formatDatum(d) {
+    const date = new Date(d);
+    const dan = String(date.getDate()).padStart(2, '0');
+    const mesec = String(date.getMonth() + 1).padStart(2, '0');
+    const godina = date.getFullYear();
+    return `${dan}.${mesec}.${godina}.`;
+}
+
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
         alert("Morate biti prijavljeni!");
@@ -118,40 +130,36 @@ onAuthStateChanged(auth, async (user) => {
 
     document.getElementById("filterForm").addEventListener("submit", async (e) => {
         e.preventDefault();
+
         const datumOd = document.getElementById("datumOd").value;
         const datumDo = document.getElementById("datumDo").value;
+        const brojParcele = document.getElementById("brojParcele").value.trim();
 
-        if (!datumOd || !datumDo) {
-            alert("Molimo izaberite oba datuma!");
+        if (!datumOd || !datumDo || !brojParcele) {
+            alert("Molimo popunite sve podatke, uključujući broj parcele!");
             return;
         }
 
-        // 🔹 Učitavanje prihoda i troškova
-        const prihodiQ = query(collection(db, "prihodi"), where("userId", "==", user.uid));
-        const troskoviQ = query(collection(db, "troskovi"), where("userId", "==", user.uid));
-        const [prihodiSnap, troskoviSnap] = await Promise.all([getDocs(prihodiQ), getDocs(troskoviQ)]);
+        const prihodiSnap = await getDocs(query(collection(db, "prihodi"), where("userId", "==", user.uid), where("brojParcele", "==", brojParcele)));
+        const troskoviSnap = await getDocs(query(collection(db, "troskovi"), where("userId", "==", user.uid), where("brojParcele", "==", brojParcele)));
 
         let ukupniPrihodi = 0;
         let ukupniTroskovi = 0;
+        let detaljiHTML = "<h3>Bilans za parcelu " + brojParcele + "</h3>";
 
-        // 🔹 Sabiranje prihoda
-        prihodiSnap.forEach(docSnap => {
-            const p = docSnap.data();
-            if (!p.datum) return;
+        prihodiSnap.forEach(doc => {
+            const p = doc.data();
             if (p.datum >= datumOd && p.datum <= datumDo) {
-                const prihodGlavni = parseFloat((p.kolicina || 0) * (p.prodajnaCena || 0));
-                const prihodOstalo = parseFloat(p.ostalo?.iznos || 0);
-                ukupniPrihodi += prihodGlavni + prihodOstalo;
+                const iznos = parseFloat((p.kolicina || 0) * (p.prodajnaCena || 0)) + parseFloat(p.ostalo?.iznos || 0);
+                ukupniPrihodi += iznos;
+                detaljiHTML += `<p>${formatDatum(p.datum)} - Prihod: ${formatBroj(iznos)} RSD</p>`;
             }
         });
 
-        // 🔹 Sabiranje troškova (sve vrste)
-        troskoviSnap.forEach(docSnap => {
-            const t = docSnap.data();
-            if (!t.datum) return;
+        troskoviSnap.forEach(doc => {
+            const t = doc.data();
             if (t.datum >= datumOd && t.datum <= datumDo) {
                 let ukupno = 0;
-
                 switch (t.tip) {
                     case "Sezonci":
                         ukupno = (t.trosakPoRadniku || 0) * (t.brojRadnika || 0) + (t.trosakPrevoza || 0);
@@ -164,35 +172,26 @@ onAuthStateChanged(auth, async (user) => {
                         ukupno = (t.kolicinaLitara || 0) * (t.cenaPoLitru || 0) || t.trosak || 0;
                         break;
                     case "Ostalo":
-                        ukupno = t.iznos || t.trosak || 0;
+                        ukupno = t.trosak || t.iznos || 0;
                         break;
                     default:
                         ukupno = t.trosak || t.iznos || 0;
                 }
-
                 ukupniTroskovi += ukupno;
+                detaljiHTML += `<p>${formatDatum(t.datum)} - ${t.tip}: ${formatBroj(ukupno)} RSD${t.napomena ? " (Napomena: " + t.napomena + ")" : ""}</p>`;
             }
         });
 
-        // 🔹 Izračunavanje bilansa
         const bilans = ukupniPrihodi - ukupniTroskovi;
-        const rezultatHTML = `
-            <h3>Rezime bilansa</h3>
-            <p><strong>Prihodi:</strong> ${formatBroj(ukupniPrihodi)} RSD</p>
-            <p><strong>Troškovi:</strong> ${formatBroj(ukupniTroskovi)} RSD</p>
-            <p><strong>Rezultat:</strong> 
-                <span class="${bilans >= 0 ? 'positive' : 'negative'}">
-                    ${bilans >= 0 ? 'Dobitak' : 'Gubitak'}: ${formatBroj(Math.abs(bilans))} RSD
-                </span>
-            </p>
-        `;
+        detaljiHTML += `<hr><p>Ukupni prihodi: ${formatBroj(ukupniPrihodi)} RSD</p>
+                        <p>Ukupni troškovi: ${formatBroj(ukupniTroskovi)} RSD</p>
+                        <p>Rezultat: <span class="${bilans >= 0 ? 'positive' : 'negative'}">${bilans >= 0 ? 'Dobitak' : 'Gubitak'}: ${formatBroj(Math.abs(bilans))} RSD</span></p>`;
 
-        document.getElementById('rezultati').innerHTML = rezultatHTML;
+        document.getElementById('rezultati').innerHTML = detaljiHTML;
         document.getElementById('izvestajSadrzaj').style.display = "block";
     });
 });
 
-// 🔹 Generisanje PDF izveštaja
 document.getElementById('pdfBtn').addEventListener('click', async () => {
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF("p", "mm", "a4");
@@ -205,12 +204,16 @@ document.getElementById('pdfBtn').addEventListener('click', async () => {
     pdf.addImage(imgData, "PNG", 10, 25, pdfWidth, pdfHeight);
     const datumOd = document.getElementById('datumOd').value;
     const datumDo = document.getElementById('datumDo').value;
-    pdf.save(`Izvestaj_bilans_${datumOd}_do_${datumDo}.pdf`);
+    const brojParcele = document.getElementById('brojParcele').value.trim();
+    pdf.save(`Izvestaj_bilans_parcela_${brojParcele}_${datumOd}_do_${datumDo}.pdf`);
 });
 </script>
 
 </body>
 </html>
+
+
+
 
 
 
