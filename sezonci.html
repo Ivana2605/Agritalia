@@ -31,6 +31,7 @@
         padding: 8px;
         border-radius: 6px;
         border: 1px solid #ccc;
+        font-size: 15px;
     }
     textarea { resize: vertical; }
     button {
@@ -70,16 +71,16 @@
     <input type="text" id="brojParcele" placeholder="npr. 12a, 5/3..." required />
 
     <label for="brojRadnika">Broj angažovanih radnika:</label>
-    <input type="number" id="brojRadnika" required />
+    <input type="text" id="brojRadnika" placeholder="unesite ceo broj (npr. 3)" required />
 
-    <label for="trosak">Trošak po radniku (RSD):</label>
-    <input type="number" id="trosak" required />
+    <label for="trosak">Cena po radniku (RSD):</label>
+    <input type="text" id="trosak" placeholder="npr. 1200 ili 1.200,50" required />
 
     <label for="trosakPrevoza">Trošak prevoza radnika (RSD):</label>
-    <input type="number" id="trosakPrevoza" />
+    <input type="text" id="trosakPrevoza" placeholder="opciono" />
 
     <label for="ukupanTrosak">Ukupan trošak (RSD):</label>
-    <input type="number" id="ukupanTrosak" readonly style="background:#f0f0f0;" />
+    <input type="text" id="ukupanTrosak" readonly style="background:#f0f0f0;" />
 
     <label for="napomena">Napomena:</label>
     <textarea id="napomena" rows="3" placeholder="(nije obavezno)"></textarea>
@@ -115,47 +116,67 @@ onAuthStateChanged(auth, user => {
     }
 });
 
-// Automatski izračun ukupnog troška
+// helper: prihvati i zarez kao decimalni razdelnik
+function parseNumberInput(str) {
+    if (!str && str !== 0) return 0;
+    // ukloni razmake i tačke grupisanja (npr. "1.200,50" -> "1200,50")
+    const cleaned = String(str).trim().replace(/\s/g,'').replace(/\./g,'').replace(',', '.');
+    const n = Number(cleaned);
+    return isNaN(n) ? 0 : n;
+}
+
 const brojRadnikaInput = document.getElementById("brojRadnika");
 const trosakInput = document.getElementById("trosak");
 const trosakPrevozaInput = document.getElementById("trosakPrevoza");
 const ukupanInput = document.getElementById("ukupanTrosak");
 
 function izracunajUkupno() {
-    const brojRadnika = parseFloat(brojRadnikaInput.value) || 0;
-    const trosak = parseFloat(trosakInput.value) || 0;
-    const trosakPrevoza = parseFloat(trosakPrevozaInput.value) || 0;
-    ukupanInput.value = (brojRadnika * trosak + trosakPrevoza).toFixed(2);
+    const brojRadnika = parseNumberInput(brojRadnikaInput.value) || 0;
+    const trosak = parseNumberInput(trosakInput.value) || 0;
+    const trosakPrevoza = parseNumberInput(trosakPrevozaInput.value) || 0;
+    const ukupno = (brojRadnika * trosak) + trosakPrevoza;
+    // formatiraj za prikaz (dve decimale, sr-RS)
+    ukupanInput.value = ukupno.toLocaleString('sr-RS', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-brojRadnikaInput.addEventListener("input", izracunajUkupno);
-trosakInput.addEventListener("input", izracunajUkupno);
-trosakPrevozaInput.addEventListener("input", izracunajUkupno);
+// listen svi inputi (tekstualni, ali prihvatamo zarez/tacku)
+[brojRadnikaInput, trosakInput, trosakPrevozaInput].forEach(el=>{
+    el.addEventListener('input', izracunajUkupno);
+});
 
-// Slanje podataka u Firestore
 document.getElementById("sezonciForm").addEventListener("submit", async (e) => {
     e.preventDefault();
-
     const user = auth.currentUser;
-    if (!user) {
-        alert("Morate biti prijavljeni!");
-        return;
-    }
+    if (!user) { alert("Morate biti prijavljeni!"); return; }
 
-    const brojRadnika = parseInt(brojRadnikaInput.value) || 0;
-    const trosak = parseFloat(trosakInput.value) || 0;
-    const trosakPrevoza = parseFloat(trosakPrevozaInput.value) || 0;
+    // parsiraj sigurno vrednosti
+    const datum = document.getElementById("datum").value;
+    const brojParcele = document.getElementById("brojParcele").value.trim();
+    const brojRadnika = parseNumberInput(brojRadnikaInput.value);
+    const trosak = parseNumberInput(trosakInput.value);
+    const trosakPrevoza = parseNumberInput(trosakPrevozaInput.value);
+    const ukupno = (brojRadnika * trosak) + trosakPrevoza;
+    const napomena = document.getElementById("napomena").value || "";
+
+    // osnovna validacija
+    if (!datum || !brojParcele) { alert("Datum i broj parcele su obavezni."); return; }
+    if (brojRadnika <= 0 || trosak <= 0) { 
+        if (!confirm("Broj radnika ili cena izgleda nula. Da li zaista želite da snimite?")) {
+            return;
+        }
+    }
 
     try {
         await addDoc(collection(db, "troskovi"), {
             userId: user.uid,
             tip: "Sezonci",
-            datum: document.getElementById("datum").value,
-            brojParcele: document.getElementById("brojParcele").value.trim(),
-            brojRadnika: brojRadnika,
-            trosak: trosak,
-            trosakPrevoza: trosakPrevoza,
-            napomena: document.getElementById("napomena").value || "",
+            datum,
+            brojParcele,
+            brojRadnika,
+            trosak,
+            trosakPrevoza,
+            ukupno,             // čuvamo ukupno radi lakšeg izveštaja
+            napomena,
             timestamp: serverTimestamp()
         });
 
@@ -171,6 +192,7 @@ document.getElementById("sezonciForm").addEventListener("submit", async (e) => {
 
 </body>
 </html>
+
 
 
 
