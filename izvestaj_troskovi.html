@@ -2,7 +2,7 @@
 <html lang="sr">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <title>Izveštaj troškova</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet" />
@@ -11,38 +11,37 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body {
     font-family: 'Rubik', sans-serif;
     max-width: 480px;
     margin: 0 auto;
-    padding: 10px;
+    padding: 12px;
     background-color: #f7f7f7;
     color: #2e7d32;
     text-align: center;
     overflow-x: hidden;
 }
-h2 { margin: 20px 0; }
+h2 { margin: 20px 0; font-size: 1.5rem; }
 form {
     margin-top: 20px;
-    background: white;
-    padding: 15px;
-    border-radius: 10px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    background: #fff;
+    padding: 18px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     text-align: left;
-    box-sizing: border-box;
 }
 label {
     display: block;
-    margin: 10px 0 5px;
+    margin: 12px 0 6px;
     font-weight: 500;
 }
 input {
     width: 100%;
-    padding: 10px;
-    border-radius: 6px;
+    padding: 10px 12px;
+    border-radius: 8px;
     border: 1px solid #ccc;
-    box-sizing: border-box;
-    font-size: 15px;
+    font-size: 16px;
     margin-bottom: 10px;
 }
 button {
@@ -55,10 +54,13 @@ button {
     cursor: pointer;
     font-weight: 600;
     margin-top: 10px;
+    transition: background-color 0.2s, transform 0.1s;
 }
 button:hover { opacity: 0.9; }
+button:active { transform: scale(0.98); }
 .pdfBtn { background: #1565c0; margin-top: 15px; }
 .backBtn { background: #d32f2f; margin-top: 20px; }
+
 .results {
     background: white;
     border-radius: 10px;
@@ -66,8 +68,16 @@ button:hover { opacity: 0.9; }
     text-align: left;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     margin-top: 20px;
+    overflow-wrap: break-word;
 }
-canvas { margin-top: 20px; }
+canvas { margin-top: 20px; max-width: 100%; }
+
+@media (max-width: 480px) {
+    body { padding: 10px; }
+    form { padding: 15px; }
+    input, button { font-size: 16px; }
+    h2 { font-size: 1.4rem; }
+}
 </style>
 </head>
 <body>
@@ -100,7 +110,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-// Firebase konfiguracija
 const firebaseConfig = {
     apiKey: "AIzaSyBGeFazvjgtDUbB-VSJlEcXDe4bW-r0sJs",
     authDomain: "agritalia-app.firebaseapp.com",
@@ -121,7 +130,6 @@ function formatDatum(d) {
     const godina = date.getFullYear();
     return `${dan}.${mesec}.${godina}.`;
 }
-
 function formatBroj(n) {
     return new Intl.NumberFormat('sr-RS', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 }
@@ -140,10 +148,7 @@ onAuthStateChanged(auth, async (user) => {
         const datumDo = document.getElementById("datumDo").value;
         const brojParceleFilter = document.getElementById("brojParcele").value.trim();
 
-        if (!datumOd || !datumDo) {
-            alert("Molimo izaberite oba datuma!");
-            return;
-        }
+        if (!datumOd || !datumDo) { alert("Molimo izaberite oba datuma!"); return; }
 
         const q = query(collection(db, "troskovi"), where("userId", "==", user.uid));
         const snapshot = await getDocs(q);
@@ -153,13 +158,11 @@ onAuthStateChanged(auth, async (user) => {
             const t = docSnap.data();
             if (!t.datum) return;
             if (t.datum >= datumOd && t.datum <= datumDo) {
-                if (!brojParceleFilter || t.brojParcele === brojParceleFilter) {
-                    filtered.push(t);
-                }
+                if (!brojParceleFilter || t.brojParcele === brojParceleFilter) filtered.push(t);
             }
         });
 
-        if (filtered.length === 0) {
+        if (!filtered.length) {
             document.getElementById('rezultati').innerHTML = "<p>Nema troškova za izabrani period i parcelu.</p>";
             document.getElementById('izvestajSadrzaj').style.display = "block";
             if (window.chartInstance) window.chartInstance.destroy();
@@ -172,30 +175,23 @@ onAuthStateChanged(auth, async (user) => {
 
         filtered.forEach(t => {
             let ukupno = t.trosak || 0;
+            if (t.tip === "Sezonci") ukupno = (t.brojRadnika||0)*(t.trosak||0)+(t.trosakPrevoza||0);
+            else if (t.tip==="Đubriva"||t.tip==="Pesticidi") ukupno=(t.trosak||0)*(t.kolicina||1);
 
-            if (t.tip === "Sezonci") {
-                ukupno = (t.brojRadnika || 0) * (t.trosak || 0) + (t.trosakPrevoza || 0);
-            } else if (t.tip === "Đubriva" || t.tip === "Pesticidi") {
-                ukupno = (t.trosak || 0) * (t.kolicina || 1);
-            }
+            poTipu[t.tip]=(poTipu[t.tip]||0)+ukupno;
+            total+=ukupno;
 
-            poTipu[t.tip] = (poTipu[t.tip] || 0) + ukupno;
-            total += ukupno;
-
-            // Ovde je ispravka: prikazuje napomenu iz t.napomena ili t.opis
             detaljiHTML += `
                 <div>
                     <strong>${formatDatum(t.datum)} - ${t.tip}</strong><br/>
-                    ${t.kolicina ? `Količina: ${formatBroj(t.kolicina)}<br/>` : ''}
-                    ${t.brojRadnika ? `Broj radnika: ${t.brojRadnika}<br/>` : ''}
-                    ${t.trosak ? `Cena: ${formatBroj(t.trosak)} RSD<br/>` : ''}
-                    ${t.trosakPrevoza ? `Prevoz: ${formatBroj(t.trosakPrevoza)} RSD<br/>` : ''}
+                    ${t.kolicina?`Količina: ${formatBroj(t.kolicina)}<br/>`:''}
+                    ${t.brojRadnika?`Broj radnika: ${t.brojRadnika}<br/>`:''}
+                    ${t.trosak?`Cena: ${formatBroj(t.trosak)} RSD<br/>`:''}
+                    ${t.trosakPrevoza?`Prevoz: ${formatBroj(t.trosakPrevoza)} RSD<br/>`:''}
                     Broj parcele: ${t.brojParcele || ''}<br/>
-                    ${t.napomena || t.opis ? `Napomena: ${t.napomena || t.opis}<br/>` : ''}
+                    ${t.napomena||t.opis?`Napomena: ${t.napomena||t.opis}<br/>`:''}
                     <strong>Ukupno: ${formatBroj(ukupno)} RSD</strong>
-                </div>
-                <hr>
-            `;
+                </div><hr>`;
         });
 
         document.getElementById('rezultati').innerHTML = `
@@ -204,50 +200,29 @@ onAuthStateChanged(auth, async (user) => {
             <h3>Analiza troškova</h3>
             <p><strong>Ukupan broj unosa:</strong> ${filtered.length}</p>
             <p><strong>Ukupan trošak:</strong> ${formatBroj(total)} RSD</p>
-            <ul>
-                ${Object.entries(poTipu).map(([tip,vrednost])=>`<li>${tip}: <strong>${formatBroj(vrednost)} RSD</strong></li>`).join('')}
-            </ul>
+            <ul>${Object.entries(poTipu).map(([tip,v])=>`<li>${tip}: <strong>${formatBroj(v)} RSD</strong></li>`).join('')}</ul>
         `;
 
-        const labels = Object.keys(poTipu);
-        const values = Object.values(poTipu);
-        const ctx = document.getElementById('troskoviChart');
-
-        if (window.chartInstance) window.chartInstance.destroy();
-        window.chartInstance = new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: values,
-                    backgroundColor: ["#2e7d32","#66bb6a","#81c784","#a5d6a7"]
-                }]
-            },
-            options: {
-                plugins: {
-                    legend: { position: "bottom" },
-                    title: { display: true, text: "Udeo troškova po tipu" }
-                }
-            }
-        });
-
-        document.getElementById('izvestajSadrzaj').style.display = "block";
+        const ctx=document.getElementById('troskoviChart');
+        if(window.chartInstance) window.chartInstance.destroy();
+        window.chartInstance = new Chart(ctx,{type:'pie',data:{labels:Object.keys(poTipu),datasets:[{data:Object.values(poTipu),backgroundColor:["#2e7d32","#66bb6a","#81c784","#a5d6a7"]}]},options:{plugins:{legend:{position:"bottom"},title:{display:true,text:"Udeo troškova po tipu"}}}});
+        document.getElementById('izvestajSadrzaj').style.display="block";
     });
 });
 
-document.getElementById('pdfBtn').addEventListener('click', async () => {
+document.getElementById('pdfBtn').addEventListener('click', async ()=>{
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF("p", "mm", "a4");
-    const sadrzaj = document.getElementById("izvestajSadrzaj");
-    const canvasImg = await html2canvas(sadrzaj, { scale: 2 });
-    const imgData = canvasImg.toDataURL("image/png");
-    const pdfWidth = 190;
-    const pdfHeight = (canvasImg.height * pdfWidth) / canvasImg.width;
-    pdf.text("Izveštaj troškova", 15, 15);
-    pdf.addImage(imgData, "PNG", 10, 25, pdfWidth, pdfHeight);
-    const datumOd = document.getElementById('datumOd').value;
-    const datumDo = document.getElementById('datumDo').value;
-    const brojParcele = document.getElementById('brojParcele').value.trim();
+    const pdf = new jsPDF("p","mm","a4");
+    const sadrzaj=document.getElementById("izvestajSadrzaj");
+    const canvasImg=await html2canvas(sadrzaj,{scale:2});
+    const imgData=canvasImg.toDataURL("image/png");
+    const pdfWidth=190;
+    const pdfHeight=(canvasImg.height*pdfWidth)/canvasImg.width;
+    pdf.text("Izveštaj troškova",15,15);
+    pdf.addImage(imgData,"PNG",10,25,pdfWidth,pdfHeight);
+    const datumOd=document.getElementById('datumOd').value;
+    const datumDo=document.getElementById('datumDo').value;
+    const brojParcele=document.getElementById('brojParcele').value.trim();
     pdf.save(`Izvestaj_troskova_parcela_${brojParcele}_${datumOd}_do_${datumDo}.pdf`);
 });
 </script>

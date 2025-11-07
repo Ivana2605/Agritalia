@@ -2,58 +2,74 @@
 <html lang="sr">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <title>Troškovi - Đubriva</title>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet" />
 <style>
+/* RESET I OSNOVNI STILOVI */
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
 body {
     font-family: 'Rubik', sans-serif;
     max-width: 480px;
     margin: 0 auto;
-    padding: 10px;
+    padding: 12px;
     background-color: #f7f7f7;
     color: #2e7d32;
     text-align: center;
+    overflow-x: hidden;
 }
-h2 { 
-    margin: 20px 0; 
+
+/* NASLOV */
+h2 {
+    margin: 25px 0 15px;
+    font-weight: 700;
+    font-size: 1.5rem;
 }
+
+/* FORMA */
 form {
-    margin-top: 20px;
-    background: white;
-    padding: 15px;
-    border-radius: 10px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    background: #fff;
+    padding: 18px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
 }
+
 label {
     display: block;
-    margin: 10px 0 5px;
     text-align: left;
+    margin: 12px 0 6px;
     font-weight: 500;
+    font-size: 0.95rem;
 }
+
 input, textarea {
-    display: block;
     width: 100%;
-    box-sizing: border-box;
-    padding: 10px;
-    border-radius: 6px;
+    padding: 10px 12px;
+    border-radius: 8px;
     border: 1px solid #ccc;
-    font-size: 15px;
-    outline: none;
+    font-size: 1rem;
     transition: border-color 0.2s;
 }
-input:focus, textarea:focus { border-color: #2e7d32; }
+input:focus, textarea:focus {
+    border-color: #2e7d32;
+    outline: none;
+}
 textarea { resize: vertical; }
 
-/* Uklanjanje strelica u brojčanim poljima */
+/* Uklanjanje strelica u number input */
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 input[type=number] { appearance: textfield; }
 
+/* DUGMAD */
 button {
     width: 100%;
     padding: 12px;
-    font-size: 16px;
+    font-size: 1rem;
     border-radius: 10px;
     border: none;
     background-color: #2e7d32;
@@ -61,11 +77,43 @@ button {
     cursor: pointer;
     font-weight: 600;
     margin-top: 15px;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, transform 0.1s;
 }
 button:hover { background-color: #27682c; }
-.backBtn { background: #d32f2f; margin-top: 20px; }
-.backBtn:hover { background-color: #b71c1c; }
+button:active { transform: scale(0.98); }
+
+.backBtn {
+    background-color: #d32f2f;
+}
+.backBtn:hover {
+    background-color: #b71c1c;
+}
+
+/* UKUPAN TROŠAK */
+#ukupanTrosak {
+    background: #f1f1f1;
+    font-weight: 500;
+}
+
+/* RESPONSIVE PODEŠAVANJA */
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+    form {
+        padding: 15px;
+    }
+    input, textarea {
+        font-size: 16px; /* sprečava automatsko zumiranje na iPhone */
+    }
+    h2 {
+        font-size: 1.4rem;
+    }
+    button {
+        font-size: 1rem;
+        padding: 14px;
+    }
+}
 </style>
 </head>
 <body>
@@ -86,7 +134,7 @@ button:hover { background-color: #27682c; }
     <input type="number" id="trosak" required />
 
     <label for="ukupanTrosak">Ukupan trošak (RSD):</label>
-    <input type="number" id="ukupanTrosak" readonly style="background:#f0f0f0;" />
+    <input type="number" id="ukupanTrosak" readonly />
 
     <label for="napomena">Napomena:</label>
     <textarea id="napomena" rows="3" placeholder="(nije obavezno)"></textarea>
@@ -115,7 +163,6 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// Automatski izračun ukupnog troška
 const kolicinaInput = document.getElementById("kolicina");
 const trosakInput = document.getElementById("trosak");
 const ukupanInput = document.getElementById("ukupanTrosak");
@@ -129,7 +176,6 @@ function izracunajUkupno() {
 kolicinaInput.addEventListener("input", izracunajUkupno);
 trosakInput.addEventListener("input", izracunajUkupno);
 
-// Provera prijavljenog korisnika
 onAuthStateChanged(auth, user => {
     if (!user) {
         alert("Morate biti prijavljeni da biste uneli trošak!");
@@ -151,8 +197,8 @@ document.getElementById("djubrivaForm").addEventListener("submit", async (e) => 
             tip: "Đubriva",
             datum: document.getElementById("datum").value,
             brojParcele: document.getElementById("brojParcele").value.trim(),
-            kolicina: kolicina,
-            trosak: trosak,
+            kolicina,
+            trosak,
             napomena: document.getElementById("napomena").value || "",
             timestamp: serverTimestamp()
         });
@@ -168,5 +214,6 @@ document.getElementById("djubrivaForm").addEventListener("submit", async (e) => 
 
 </body>
 </html>
+
 
 

@@ -38,7 +38,7 @@ h2 { text-align: center; margin: 20px 0; }
     background: none;
     border: none;
     color: #d32f2f;
-    font-size: 18px;
+    font-size: 20px;
     cursor: pointer;
 }
 .trash:hover { color: #9a0007; }
@@ -49,7 +49,6 @@ h2 { text-align: center; margin: 20px 0; }
     border-radius: 8px;
     border-left: 4px solid #2e7d32;
 }
-.detail input { width: 80%; padding: 5px; margin: 3px 0; }
 .editBtn, .saveBtn {
     padding: 6px 10px;
     border: none;
@@ -80,6 +79,7 @@ button.backBtn {
     text-align: right;
     color: #1b5e20;
 }
+.prihod { border-left-color: #0288d1; background: #e3f2fd; }
 </style>
 </head>
 <body>
@@ -90,7 +90,7 @@ button.backBtn {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, query, where, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, query, where, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
@@ -109,9 +109,9 @@ const pregledDiv = document.getElementById("pregled");
 
 function formatDatum(d) {
     const date = new Date(d);
+    if (isNaN(date)) return d;
     return `${date.getDate()}.${date.getMonth()+1}.${date.getFullYear()}.`;
 }
-
 function formatBroj(n) {
     return new Intl.NumberFormat('sr-RS', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 }
@@ -120,15 +120,33 @@ onAuthStateChanged(auth, async (user) => {
     if (!user) { alert("Morate biti prijavljeni!"); window.location.href="index.html"; return; }
 
     const troskoviSnap = await getDocs(query(collection(db,"troskovi"), where("userId","==",user.uid)));
-    if(troskoviSnap.empty) { pregledDiv.innerHTML="<p style='text-align:center;'>Nema unetih podataka.</p>"; return; }
+    const prihodiSnap = await getDocs(query(collection(db,"prihodi"), where("userId","==",user.uid)));
+
+    if(troskoviSnap.empty && prihodiSnap.empty) {
+        pregledDiv.innerHTML="<p style='text-align:center;'>Nema unetih podataka.</p>"; 
+        return;
+    }
 
     const poDatumu = {};
+
+    // 📦 Troškovi
     troskoviSnap.forEach(docSnap=>{
         const t = docSnap.data();
         t.id = docSnap.id;
         if(!t.datum) return;
         if(!poDatumu[t.datum]) poDatumu[t.datum]=[];
+        t.vrsta = "trosak";
         poDatumu[t.datum].push(t);
+    });
+
+    // 📦 Prihodi
+    prihodiSnap.forEach(docSnap=>{
+        const p = docSnap.data();
+        p.id = docSnap.id;
+        if(!p.datum) return;
+        if(!poDatumu[p.datum]) poDatumu[p.datum]=[];
+        p.vrsta = "prihod";
+        poDatumu[p.datum].push(p);
     });
 
     const datumi = Object.keys(poDatumu).sort((a,b)=>b.localeCompare(a));
@@ -143,12 +161,22 @@ onAuthStateChanged(auth, async (user) => {
         span.textContent=formatDatum(datum);
         span.onclick=()=>prikaziDetalje(datum, poDatumu[datum]);
 
-        const delBtn = document.createElement("button");
-        delBtn.className="trash"; delBtn.innerHTML="🗑️"; delBtn.title="Obriši sve unose za ovaj datum";
-        delBtn.onclick=(e)=>{ e.stopPropagation(); obrisiDatum(datum, poDatumu[datum]); };
+        const trashBtn = document.createElement("button");
+        trashBtn.className="trash";
+        trashBtn.innerHTML="🗑️";
+        trashBtn.onclick=async (e)=>{
+            e.stopPropagation();
+            if (confirm(`Obrisati sve unose za datum ${formatDatum(datum)}?`)) {
+                for (const p of poDatumu[datum]) {
+                    await deleteDoc(doc(db, p.vrsta === "trosak" ? "troskovi" : "prihodi", p.id));
+                }
+                alert("Podaci obrisani!");
+                window.location.reload();
+            }
+        };
 
         item.appendChild(span);
-        item.appendChild(delBtn);
+        item.appendChild(trashBtn);
         listDiv.appendChild(item);
     });
 });
@@ -157,87 +185,55 @@ function prikaziDetalje(datum, podaci){
     const detailsDiv = document.createElement("div");
     detailsDiv.className="details";
     let html=`<h3>${formatDatum(datum)}</h3>`;
-    let zbir=0;
+    let zbirTroskova=0, zbirPrihoda=0;
 
     podaci.forEach(p=>{
-        let ukupno=0;
-        if(p.tip==="Sezonci") { ukupno = (p.brojRadnika*p.trosak)+(p.trosakPrevoza||0); }
-        else if(p.tip==="Pesticidi"||p.tip==="Đubriva") { ukupno = (p.kolicina*p.trosak); }
-        else { ukupno = p.trosak; }
+        if(p.vrsta==="trosak"){
+            let ukupno=0;
+            if(p.tip==="Sezonci") ukupno = (p.brojRadnika*p.trosak)+(p.trosakPrevoza||0);
+            else if(p.tip==="Pesticidi"||p.tip==="Đubriva") ukupno = (p.kolicina*p.trosak);
+            else ukupno = p.trosak;
+            zbirTroskova+=ukupno;
 
-        zbir+=ukupno;
-
-        html+=`
-        <div class="detail">
-            <strong>${p.tip}</strong><br/>
-            ${p.tip==="Sezonci"?`Radnici: <input type="text" value="${formatBroj(p.brojRadnika)}" id="kolicina-${p.id}" disabled /> x <input type="text" value="${formatBroj(p.trosak)}" id="cena-${p.id}" disabled /><br/>`:
-            p.tip==="Pesticidi"||p.tip==="Đubriva"?`Količina: <input type="text" value="${formatBroj(p.kolicina)}" id="kolicina-${p.id}" disabled /> x <input type="text" value="${formatBroj(p.trosak)}" id="cena-${p.id}" disabled /><br/>`:
-            `Iznos: <input type="text" value="${formatBroj(p.trosak)}" id="cena-${p.id}" disabled /><br/>`}
-            ${p.trosakPrevoza?`Prevoz: <input type="text" value="${formatBroj(p.trosakPrevoza)}" id="prevoz-${p.id}" disabled /><br/>`:""}
-            Napomena: <input type="text" value="${p.napomena||p.opis||""}" id="napomena-${p.id}" disabled /><br/>
-            <button class="editBtn" onclick="omoguciIzmenu('${p.id}')">✏️ Izmeni</button>
-            <button class="saveBtn" onclick="sacuvajIzmene('${p.id}','${p.tip}')" style="display:none;">💾 Sačuvaj</button>
-        </div>
-        `;
+            html+=`
+            <div class="detail">
+                <strong>${p.tip}</strong><br/>
+                Iznos: ${formatBroj(ukupno)} RSD<br/>
+                Napomena: ${p.napomena||p.opis||""}
+            </div>`;
+        } else if(p.vrsta==="prihod"){
+            const ukupno = p.ukupanPrihod || (p.kolicina*p.prodajnaCena) + (p.ostalo?.iznos||0);
+            zbirPrihoda+=ukupno;
+            html+=`
+            <div class="detail prihod">
+                <strong>Prihod (${p.kultura||p.tip||"Prihod"})</strong><br/>
+                Parcela: ${p.brojParcele||""}<br/>
+                Iznos: ${formatBroj(ukupno)} RSD
+            </div>`;
+        }
     });
 
-    html+=`<div class="ukupno-datum">Ukupan zbir za ${formatDatum(datum)}: ${formatBroj(zbir)} RSD</div>`;
+    html+=`
+    <div class="ukupno-datum">
+        Ukupno troškovi: ${formatBroj(zbirTroskova)} RSD<br/>
+        Ukupno prihodi: ${formatBroj(zbirPrihoda)} RSD<br/>
+        <hr/>
+        <strong>${zbirPrihoda>=zbirTroskova ? "Dobitak" : "Gubitak"}: ${formatBroj(zbirPrihoda - zbirTroskova)} RSD</strong>
+    </div>`;
+
     detailsDiv.innerHTML=html;
-    pregledDiv.innerHTML=""; pregledDiv.appendChild(detailsDiv);
+    pregledDiv.innerHTML="";
+    pregledDiv.appendChild(detailsDiv);
 
     const nazadBtn=document.createElement("button");
     nazadBtn.textContent="⬅ Nazad na listu datuma";
     nazadBtn.onclick=()=>window.location.reload();
     pregledDiv.appendChild(nazadBtn);
 }
-
-window.omoguciIzmenu=function(id){
-    ["kolicina","cena","prevoz","napomena"].forEach(f=>{
-        const el=document.getElementById(`${f}-${id}`);
-        if(el) el.disabled=false;
-    });
-    const saveBtn = document.querySelector(`#cena-${id}`).closest(".detail").querySelector(".saveBtn");
-    const editBtn = document.querySelector(`#cena-${id}`).closest(".detail").querySelector(".editBtn");
-    saveBtn.style.display="inline-block";
-    editBtn.style.display="none";
-}
-
-window.sacuvajIzmene=async function(id, tip){
-    const docRef = doc(db, "troskovi", id);
-
-    let kolicina=parseFloat(document.getElementById(`kolicina-${id}`)?.value.replace(/\./g,'').replace(',','.'))||0;
-    let cena=parseFloat(document.getElementById(`cena-${id}`)?.value.replace(/\./g,'').replace(',','.'))||0;
-    const prevoz=parseFloat(document.getElementById(`prevoz-${id}`)?.value.replace(/\./g,'').replace(',','.'))||0;
-    const napomena=document.getElementById(`napomena-${id}`).value;
-
-    try{
-        if(tip==="Sezonci"){
-            await updateDoc(docRef,{ brojRadnika:kolicina, trosak:cena, trosakPrevoza:prevoz, napomena });
-        } else if(tip==="Pesticidi"||tip==="Đubriva"){
-            await updateDoc(docRef,{ kolicina:kolicina, trosak:cena, napomena });
-        } else {
-            await updateDoc(docRef,{ trosak:cena, napomena });
-        }
-        alert("Izmene sačuvane!"); window.location.reload();
-    } catch(err){
-        console.error(err); alert("Greška pri čuvanju: "+err.message);
-    }
-}
-
-async function obrisiDatum(datum, zapisi){
-    if(!confirm(`Da li ste sigurni da želite obrisati sve unose za datum ${formatDatum(datum)}?`)) return;
-    try{
-        for(const p of zapisi){
-            await deleteDoc(doc(db,"troskovi",p.id));
-        }
-        alert("Svi unosi za izabrani datum su obrisani.");
-        window.location.reload();
-    } catch(err){
-        console.error(err); alert("Greška pri brisanju: "+err.message);
-    }
-}
 </script>
 
 </body>
 </html>
+
+
 
