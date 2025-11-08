@@ -49,6 +49,19 @@ h2 { text-align: center; margin: 20px 0; }
     border-radius: 8px;
     border-left: 4px solid #2e7d32;
 }
+.detail-inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    align-items: center;
+}
+.detail-inline input {
+    flex: 1;
+    padding: 6px 8px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
 .editBtn, .saveBtn {
     padding: 6px 10px;
     border: none;
@@ -57,7 +70,7 @@ h2 { text-align: center; margin: 20px 0; }
     margin-top: 5px;
     font-weight: 600;
 }
-.editBtn { background: #0288d1; color: white; }
+.editBtn { background: #0288d1; color: white; font-size: 14px; }
 .editBtn:hover { background: #0277bd; }
 .saveBtn { background: #2e7d32; color: white; }
 .saveBtn:hover { background-color: #27682c; }
@@ -71,7 +84,7 @@ button.backBtn {
     color: white;
     cursor: pointer;
     font-weight: 600;
-    margin-top: 20px;
+    margin-top: 10px;
 }
 .ukupno-datum {
     font-weight: bold;
@@ -90,7 +103,7 @@ button.backBtn {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, query, where, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, query, where, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
@@ -116,6 +129,10 @@ function formatBroj(n) {
     return new Intl.NumberFormat('sr-RS', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 }
 
+let trenutniPodaci = [];
+let ukupnoTroskovi = 0;
+let ukupnoPrihodi = 0;
+
 onAuthStateChanged(auth, async (user) => {
     if (!user) { alert("Morate biti prijavljeni!"); window.location.href="index.html"; return; }
 
@@ -129,7 +146,6 @@ onAuthStateChanged(auth, async (user) => {
 
     const poDatumu = {};
 
-    // 📦 Troškovi
     troskoviSnap.forEach(docSnap=>{
         const t = docSnap.data();
         t.id = docSnap.id;
@@ -139,7 +155,6 @@ onAuthStateChanged(auth, async (user) => {
         poDatumu[t.datum].push(t);
     });
 
-    // 📦 Prihodi
     prihodiSnap.forEach(docSnap=>{
         const p = docSnap.data();
         p.id = docSnap.id;
@@ -182,58 +197,126 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 function prikaziDetalje(datum, podaci){
+    trenutniPodaci = podaci;
+    ukupnoTroskovi = 0;
+    ukupnoPrihodi = 0;
     const detailsDiv = document.createElement("div");
     detailsDiv.className="details";
     let html=`<h3>${formatDatum(datum)}</h3>`;
-    let zbirTroskova=0, zbirPrihoda=0;
 
-    podaci.forEach(p=>{
+    podaci.forEach((p, idx)=>{
+        let ukupno = 0;
         if(p.vrsta==="trosak"){
-            let ukupno=0;
             if(p.tip==="Sezonci") ukupno = (p.brojRadnika*p.trosak)+(p.trosakPrevoza||0);
             else if(p.tip==="Pesticidi"||p.tip==="Đubriva") ukupno = (p.kolicina*p.trosak);
             else ukupno = p.trosak;
-            zbirTroskova+=ukupno;
+            ukupnoTroskovi+=ukupno;
 
             html+=`
-            <div class="detail">
+            <div class="detail" id="detail-${idx}">
                 <strong>${p.tip}</strong><br/>
-                Iznos: ${formatBroj(ukupno)} RSD<br/>
+                Broj parcele: ${p.brojParcele||""}<br/>
+                Iznos: <span id="iznosPrikaz-${idx}">${formatBroj(ukupno)}</span> RSD<br/>
                 Napomena: ${p.napomena||p.opis||""}
             </div>`;
         } else if(p.vrsta==="prihod"){
             const ukupno = p.ukupanPrihod || (p.kolicina*p.prodajnaCena) + (p.ostalo?.iznos||0);
-            zbirPrihoda+=ukupno;
+            ukupnoPrihodi+=ukupno;
             html+=`
-            <div class="detail prihod">
+            <div class="detail prihod" id="detail-${idx}">
                 <strong>Prihod (${p.kultura||p.tip||"Prihod"})</strong><br/>
-                Parcela: ${p.brojParcele||""}<br/>
-                Iznos: ${formatBroj(ukupno)} RSD
+                Broj parcele: ${p.brojParcele||""}<br/>
+                Iznos: <span id="iznosPrikaz-${idx}">${formatBroj(ukupno)}</span> RSD
             </div>`;
         }
     });
 
     html+=`
-    <div class="ukupno-datum">
-        Ukupno troškovi: ${formatBroj(zbirTroskova)} RSD<br/>
-        Ukupno prihodi: ${formatBroj(zbirPrihoda)} RSD<br/>
+    <div class="ukupno-datum" id="ukupnoDatum">
+        Ukupno troškovi: <span id="ukTroskovi">${formatBroj(ukupnoTroskovi)}</span> RSD<br/>
+        Ukupno prihodi: <span id="ukPrihodi">${formatBroj(ukupnoPrihodi)}</span> RSD<br/>
         <hr/>
-        <strong>${zbirPrihoda>=zbirTroskova ? "Dobitak" : "Gubitak"}: ${formatBroj(zbirPrihoda - zbirTroskova)} RSD</strong>
+        <strong id="rezultat">${ukupnoPrihodi>=ukupnoTroskovi ? "Dobitak" : "Gubitak"}: ${formatBroj(ukupnoPrihodi - ukupnoTroskovi)} RSD</strong>
     </div>`;
 
     detailsDiv.innerHTML=html;
     pregledDiv.innerHTML="";
     pregledDiv.appendChild(detailsDiv);
 
+    // Dugme izmeni samo u detaljima
+    const izmeniBtn=document.createElement("button");
+    izmeniBtn.textContent="Izmeni";
+    izmeniBtn.className="editBtn";
+    izmeniBtn.style.display = "block";
+    izmeniBtn.style.margin = "10px auto";
+    izmeniBtn.onclick=()=>omoguciIzmenu();
+    pregledDiv.appendChild(izmeniBtn);
+
+    // Dugme nazad
     const nazadBtn=document.createElement("button");
     nazadBtn.textContent="⬅ Nazad na listu datuma";
-    nazadBtn.onclick=()=>window.location.reload();
+    nazadBtn.className="backBtn";
     pregledDiv.appendChild(nazadBtn);
+}
+
+// Omogućavanje izmene sa inline inputima
+function omoguciIzmenu() {
+    trenutniPodaci.forEach((p, idx)=>{
+        const div = document.getElementById(`detail-${idx}`);
+        if(!div) return;
+        div.innerHTML = `
+            <div class="detail-inline">
+                <input type="text" id="brojParcele-${idx}" value="${p.brojParcele||''}" placeholder="Broj parcele"/>
+                <input type="number" id="iznos-${idx}" value="${p.trosak||p.ukupanPrihod||0}" placeholder="Iznos"/>
+                <input type="text" id="napomena-${idx}" value="${p.napomena||p.opis||''}" placeholder="Napomena"/>
+                <button class="saveBtn" onclick="sacuvajIzmenu('${p.id}', '${p.vrsta==="trosak"?"troskovi":"prihodi"}', ${idx})">Sačuvaj</button>
+            </div>
+        `;
+        document.getElementById(`iznos-${idx}`).addEventListener('input', updateUkupno);
+    });
+}
+
+function updateUkupno() {
+    let noviTroskovi = 0, noviPrihodi = 0;
+    trenutniPodaci.forEach((p, idx)=>{
+        const iznos = parseFloat(document.getElementById(`iznos-${idx}`).value) || 0;
+        if(p.vrsta==="trosak") noviTroskovi += iznos;
+        else noviPrihodi += iznos;
+    });
+    document.getElementById("ukTroskovi").textContent = formatBroj(noviTroskovi);
+    document.getElementById("ukPrihodi").textContent = formatBroj(noviPrihodi);
+    const rezultat = document.getElementById("rezultat");
+    const razlika = noviPrihodi - noviTroskovi;
+    rezultat.textContent = razlika >=0 ? `Dobitak: ${formatBroj(razlika)} RSD` : `Gubitak: ${formatBroj(-razlika)} RSD`;
+    rezultat.style.color = razlika>=0 ? '#1b5e20' : '#d32f2f';
+}
+
+window.sacuvajIzmenu = async (id, kolekcija, idx) => {
+    const brojParcele = document.getElementById(`brojParcele-${idx}`).value.trim();
+    const iznos = parseFloat(document.getElementById(`iznos-${idx}`).value) || 0;
+    const napomena = document.getElementById(`napomena-${idx}`).value || "";
+
+    try {
+        const updateData = { brojParcele };
+        if(kolekcija==="troskovi") updateData.trosak = iznos;
+        if(kolekcija==="prihodi") updateData.ukupanPrihod = iznos;
+        if(napomena) updateData.napomena = napomena;
+
+        await updateDoc(doc(db, kolekcija, id), updateData);
+        alert("Izmena sačuvana!");
+        window.location.reload();
+    } catch(err){
+        console.error(err);
+        alert("Greška pri čuvanju izmene: "+err.message);
+    }
 }
 </script>
 
 </body>
 </html>
+
+
+
 
 
 

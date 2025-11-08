@@ -155,47 +155,76 @@ onAuthStateChanged(auth, async (user) => {
         let ukupniTroskovi = 0;
         let ukupniPrihodi = 0;
 
+        // 🔧 Troškovi
         troskoviSnap.forEach(docSnap => {
             const t = docSnap.data();
             if (!t.datum || t.brojParcele !== brojParcele) return;
             if (t.datum >= datumOd && t.datum <= datumDo) {
                 let ukupno = 0;
+
                 switch(t.tip) {
                     case "Sezonci":
-                        ukupno = (t.trosakPoRadniku||0)*(t.brojRadnika||0) + (t.trosakPrevoza||0);
+                        const brojRadnika =
+                            Number(t.brojRadnika) || Number(t.broj_radnika) || 0;
+
+                        const trosakPoRadniku =
+                            Number(t.trosak) ||
+                            Number(t.trosakPoRadniku) ||
+                            Number(t.cenaPoRadniku) ||
+                            0;
+
+                        const trosakPrevoza =
+                            Number(t.trosakPrevoza) ||
+                            Number(t.trosak_prevoza) ||
+                            Number(t.prevoz) ||
+                            0;
+
+                        ukupno = (brojRadnika * trosakPoRadniku) + trosakPrevoza;
                         break;
+
                     case "Đubriva":
                     case "Pesticidi":
-                        ukupno = (t.trosak||0)*(t.kolicina||1);
+                        ukupno = (t.trosak || 0) * (t.kolicina || 1);
                         break;
+
                     case "Gorivo":
-                        ukupno = (t.kolicinaLitara||0)*(t.cenaPoLitru||0) || t.trosak||0;
+                        ukupno = ((t.kolicinaLitara || 0) * (t.cenaPoLitru || 0)) || t.trosak || 0;
                         break;
+
                     case "Ostalo":
                         ukupno = t.trosak || t.iznos || 0;
                         break;
+
                     default:
                         ukupno = t.trosak || t.iznos || 0;
                 }
-                poTipuTroskova[t.tip] = (poTipuTroskova[t.tip]||0)+ukupno;
+
+                poTipuTroskova[t.tip] = (poTipuTroskova[t.tip] || 0) + ukupno;
                 ukupniTroskovi += ukupno;
             }
         });
 
+        // 🔧 Prihodi
         prihodiSnap.forEach(docSnap => {
             const p = docSnap.data();
             if (!p.datum || p.brojParcele !== brojParcele) return;
             if (p.datum >= datumOd && p.datum <= datumDo) {
-                let prihod = (p.kolicina||0)*(p.prodajnaCena||0);
+                let prihod = (p.kolicina || 0) * (p.prodajnaCena || 0);
                 if (p.ostalo?.iznos) prihod += p.ostalo.iznos;
                 const tip = p.tip || "Ostalo";
-                poTipuPrihoda[tip] = (poTipuPrihoda[tip]||0) + prihod;
+                poTipuPrihoda[tip] = (poTipuPrihoda[tip] || 0) + prihod;
                 ukupniPrihodi += prihod;
             }
         });
 
+        // ✅ Rezultat bilansa
         const bilans = ukupniPrihodi - ukupniTroskovi;
+        const rezultatTekst = bilans >= 0 
+            ? `Dobitak: ${formatBroj(bilans)} RSD` 
+            : `Gubitak: ${formatBroj(Math.abs(bilans))} RSD`;
+        const rezultatKlasa = bilans >= 0 ? 'positive' : 'negative';
 
+        // HTML prikaz
         let troskoviHTML = "<h3>Troškovi po tipu</h3><ul>";
         for(const [tip, iznos] of Object.entries(poTipuTroskova)) {
             troskoviHTML += `<li>${tip}: ${formatBroj(iznos)} RSD</li>`;
@@ -212,10 +241,10 @@ onAuthStateChanged(auth, async (user) => {
             <h3>Bilans za parcelu ${brojParcele}</h3>
             ${troskoviHTML}
             ${prihodiHTML}
-            <h3>Rezultat: <span class="${bilans>=0?'positive':'negative'}">${bilans>=0?'Dobitak':'Gubitak'}: ${formatBroj(Math.abs(bilans))} RSD</span></h3>
+            <h3>Rezultat: <span class="${rezultatKlasa}">${rezultatTekst}</span></h3>
         `;
 
-        document.getElementById('izvestajSadrzaj').style.display="block";
+        document.getElementById('izvestajSadrzaj').style.display = "block";
     });
 });
 
@@ -238,6 +267,10 @@ document.getElementById('pdfBtn').addEventListener('click', async () => {
 </script>
 </body>
 </html>
+
+
+
+
 
 
 
