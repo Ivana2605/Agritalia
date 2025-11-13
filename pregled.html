@@ -133,9 +133,8 @@ let trenutniPodaci = [];
 let ukupnoTroskovi = 0;
 let ukupnoPrihodi = 0;
 
-onAuthStateChanged(auth, async (user) => {
-    if (!user) { alert("Morate biti prijavljeni!"); window.location.href="index.html"; return; }
-
+// Funkcija koja prikazuje listu datuma
+async function prikaziListuDatuma(user) {
     const troskoviSnap = await getDocs(query(collection(db,"troskovi"), where("userId","==",user.uid)));
     const prihodiSnap = await getDocs(query(collection(db,"prihodi"), where("userId","==",user.uid)));
 
@@ -145,7 +144,6 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     const poDatumu = {};
-
     troskoviSnap.forEach(docSnap=>{
         const t = docSnap.data();
         t.id = docSnap.id;
@@ -154,7 +152,6 @@ onAuthStateChanged(auth, async (user) => {
         t.vrsta = "trosak";
         poDatumu[t.datum].push(t);
     });
-
     prihodiSnap.forEach(docSnap=>{
         const p = docSnap.data();
         p.id = docSnap.id;
@@ -174,7 +171,7 @@ onAuthStateChanged(auth, async (user) => {
 
         const span = document.createElement("span");
         span.textContent=formatDatum(datum);
-        span.onclick=()=>prikaziDetalje(datum, poDatumu[datum]);
+        span.onclick=()=>prikaziDetalje(datum, poDatumu[datum], user);
 
         const trashBtn = document.createElement("button");
         trashBtn.className="trash";
@@ -186,7 +183,7 @@ onAuthStateChanged(auth, async (user) => {
                     await deleteDoc(doc(db, p.vrsta === "trosak" ? "troskovi" : "prihodi", p.id));
                 }
                 alert("Podaci obrisani!");
-                window.location.reload();
+                prikaziListuDatuma(user);
             }
         };
 
@@ -194,9 +191,10 @@ onAuthStateChanged(auth, async (user) => {
         item.appendChild(trashBtn);
         listDiv.appendChild(item);
     });
-});
+}
 
-function prikaziDetalje(datum, podaci){
+// Funkcija koja prikazuje detalje za datum
+function prikaziDetalje(datum, podaci, user){
     trenutniPodaci = podaci;
     ukupnoTroskovi = 0;
     ukupnoPrihodi = 0;
@@ -243,7 +241,7 @@ function prikaziDetalje(datum, podaci){
     pregledDiv.innerHTML="";
     pregledDiv.appendChild(detailsDiv);
 
-    // Dugme izmeni samo u detaljima
+    // Dugme izmeni
     const izmeniBtn=document.createElement("button");
     izmeniBtn.textContent="Izmeni";
     izmeniBtn.className="editBtn";
@@ -256,6 +254,7 @@ function prikaziDetalje(datum, podaci){
     const nazadBtn=document.createElement("button");
     nazadBtn.textContent="⬅ Nazad na listu datuma";
     nazadBtn.className="backBtn";
+    nazadBtn.onclick = () => prikaziListuDatuma(user); // ovo sada radi
     pregledDiv.appendChild(nazadBtn);
 }
 
@@ -304,12 +303,18 @@ window.sacuvajIzmenu = async (id, kolekcija, idx) => {
 
         await updateDoc(doc(db, kolekcija, id), updateData);
         alert("Izmena sačuvana!");
-        window.location.reload();
+        prikaziListuDatuma(auth.currentUser); // odmah osveži listu
     } catch(err){
         console.error(err);
         alert("Greška pri čuvanju izmene: "+err.message);
     }
 }
+
+// Provera prijave i prikaz liste datuma
+onAuthStateChanged(auth, user => {
+    if (!user) { alert("Morate biti prijavljeni!"); window.location.href="index.html"; return; }
+    prikaziListuDatuma(user);
+});
 </script>
 
 </body>
