@@ -5,47 +5,125 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Agritalia - Troškovi</title>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet" />
+
 <style>
     body {
         font-family: 'Rubik', sans-serif;
-        max-width: 480px;
-        margin: 0 auto;
+        margin: 0;
         padding: 10px;
         background-color: #f7f7f7;
         color: #2e7d32;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
         text-align: center;
     }
-    h2 { margin: 20px 0; }
+
+    h2 {
+        margin: 20px 0 30px;
+        font-size: 26px;
+        font-weight: 700;
+    }
+
+    /* GRID 3×2, responzivno */
+    .button-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        width: 100%;
+        max-width: 480px;
+        margin-bottom: 20px;
+    }
+
+    /* Dugmad */
     button {
         width: 100%;
-        padding: 12px;
-        font-size: 16px;
-        border-radius: 10px;
+        aspect-ratio: 1/1;
+        font-size: 18px;
+        border-radius: 14px;
         border: none;
         background-color: #2e7d32;
         color: white;
         cursor: pointer;
-        font-weight: 600;
-        margin: 10px 0;
+        font-weight: 700;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        line-height: 1.3;
+        position: relative;
+        overflow: hidden;
+        transition: background-color 0.2s, transform 0.1s;
     }
-    button:hover { background-color: #27682c; }
-    .backBtn { background: #d32f2f; margin-top: 20px; }
+
+    button span {
+        font-size: 42px;
+        margin-bottom: 8px;
+    }
+
+    button:hover {
+        background-color: #27682c;
+        transform: scale(1.03);
+    }
+
+    button:active::after {
+        content: "";
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(255,255,255,0.4);
+        border-radius: inherit;
+        animation: flash 0.4s ease-out;
+    }
+
+    @keyframes flash {
+        0% { opacity: 0.7; }
+        100% { opacity: 0; }
+    }
+
+    /* Ostalo i Nazad - isti red */
+    .full-width {
+        grid-column: 1 / span 1;
+    }
+
+    .backGrid {
+        background-color: #d32f2f !important;
+    }
+
+    .backGrid:hover {
+        background-color: #b71c1c !important;
+    }
+
+    /* Mobilna prilagodba */
+    @media (max-width: 400px) {
+        button span {
+            font-size: 36px;
+        }
+        h2 {
+            font-size: 22px;
+        }
+    }
 </style>
 </head>
 <body>
 
 <h2>Troškovi</h2>
 
-<!-- Dugmad za kategorije sa type="button" -->
-<button type="button" onclick="window.location.href='djubriva.html'">Đubriva</button>
-<button type="button" onclick="window.location.href='pesticidi.html'">Pesticidi</button>
-<button type="button" onclick="window.location.href='sezonci.html'">Sezonci</button>
-<button type="button" onclick="window.location.href='goriva.html'">Goriva</button>
-<button type="button" onclick="window.location.href='ostalo.html'">Ostalo</button>
+<div class="button-grid">
+    <button onclick="window.location.href='djubriva.html'"><span>🌱</span>Đubriva</button>
+    <button onclick="window.location.href='pesticidi.html'"><span>🧪</span>Pesticidi</button>
 
-<!-- Nazad na dashboard -->
-<button class="backBtn" type="button" onclick="window.location.href='dashboard.html'">⬅ Nazad</button>
+    <button onclick="window.location.href='sezonci.html'"><span>👨‍🌾</span>Sezonci</button>
+    <button onclick="window.location.href='goriva.html'"><span>⛽</span>Goriva</button>
+
+    <button onclick="window.location.href='ostalo.html'" class="full-width"><span>📦</span>Ostalo</button>
+    <button class="backGrid" onclick="window.location.href='dashboard.html'"><span>⬅️</span>Nazad</button>
+</div>
 
 </body>
 </html>
+
+
 
